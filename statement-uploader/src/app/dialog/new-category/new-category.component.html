@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>Create Category</h2>
+<mat-dialog-content>
+    <form action="">
+        <div  class="flex-column mx-auto my-auto">
+            <div>
+                <h4>Enter your new category:</h4>
+            </div>
+            <div>
+                <input class="w-100" type="text" placeholder="New category" [(ngModel)] = "newCategory" name="newCategory">
+            </div>
+            <div>
+                <button class="btn btn-primary" type="submit" (click)="emitCategory()">Submit</button>
+            </div>
+        </div>    
+    </form>
+</mat-dialog-content>

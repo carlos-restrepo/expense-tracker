@@ -1,0 +1,42 @@
+
+<div class="d-flex flex-column min-vh-100">
+  <div class="">
+    <div class="container ">
+      <div class="row py-3">
+        <div class="col-8">
+          <div class="btn rounded-pill bg-warning px-5">
+            <h1>Expense Tracker <i class="fa-solid fa-cat"></i></h1>
+          </div>
+        </div>
+  
+        <div class="col-4">
+          <div class="d-flex">
+
+            <button class="btn rounded-pill btn-dark" routerLink="/upload-statement" routerLinkActive="active">
+              Upload Statement <i class="fa-solid fa-cat"></i>
+            </button>
+            
+            <button class="btn btn-dark rounded-pill"  routerLink="/analytics" routerLinkActive="active">
+              Analytics <i class="fa-solid fa-cat"></i>
+            </button>
+  
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row px-4 mb-auto">
+    <router-outlet></router-outlet>
+  </div>
+
+  <div class="row justify-content-center py-3">
+    <div class="col-3 text-center border shadow rounded-pill bg-warning">
+      <h4 class="">
+        <i class="fa-solid fa-cat"></i> Footer <i class="fa-solid fa-cat"></i>
+      </h4>
+    </div>
+  </div>
+
+</div>

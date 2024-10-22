@@ -1,0 +1,150 @@
+
+<div class="border rounded shadow px-5 pb-5 pt-2 min-vh-70 bg-dark-yellow">
+    <div class="row bg-light justify-content-center align-items-center p-3
+            border shadow rounded-pill">
+        <div class="col-8">
+            <div class="d-inline-flex">
+                <input class="form-control" 
+                        type="file" 
+                        id="fileInput" 
+                        (change)="onFileSelected($event)"/>
+            </div>
+            <button class="btn btn-primary" [disabled]="!fileReady" (click)="readCsv()">
+                Process File
+            </button>
+            
+            <div>
+                @if (debitFile) {
+                    <div>
+                        <label for="accountSelect">TD Debit detected, select account to continue:</label>
+                        <select class="form-select" 
+                                (change)="enableProcessing($event)" 
+                                id="accountSelect"
+                                style="width: 150px;">
+                            <option value="" disabled selected>Account</option>
+                            <option value="carlos">Carlos</option>
+                            <option value="junsi">Junsi</option>
+                        </select>
+                    </div>
+                }
+            </div>
+        </div>
+        <button class="btn btn-danger" 
+                (click)="logAll()">
+            Log
+        </button>
+    </div> 
+
+    <div *ngIf="fileProcessed">
+        <div class="row py-4">
+            <h3 class="text-center">Set new categories:</h3>
+        </div>
+        <div class="row justify-content-center">
+            @if(uniqueNewFirstWords[0].length > 0){
+
+            <!-- Transaction Table -->
+            <div class="col-10">
+                <table class="table table-striped table-light">
+                <thead>
+                    <tr>
+                    <th>Transaction Name</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let entry of uniqueNewFirstWords[1]; let i = index">
+                        <!-- Transaction Name -->
+                        <td>{{ entry }}</td>
+                        <!-- Amount -->
+                        <td>
+                            {{ sumUniqueNewFirstWord(entry) }}
+                        </td>
+                        <!-- Category -->
+                        <td>
+                            <select class="form-select" [attr.id]="'dropdown ' + i">
+                                <option value="" selected disabled>Select category</option>
+                                <option *ngFor="let category of uniqueCategories.sort()" [value]="category">{{ category }}</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+
+            <div class="col-2 p-0">
+                <div class="d-flex flex-column justify-content-end">
+                <button class="btn btn-primary" (click)="submitStatement()">
+                    Submit
+                </button>
+                <button class="btn btn-dark" (click)="createCategoryButton()">
+                    New Category
+                </button>
+                </div>
+            </div>
+            }
+            @if(uniqueNewFirstWords[0].length === 0){
+                <div class="col-3">
+                    <span class="badge text-white rounded-pill bg-primary py-2 px-4">
+                    <h4>
+                        No new transactions
+                    </h4>
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!-- Submission Modal -->
+<div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">
+                Submitted Transactions
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                <div class="row m-3">
+                    <!-- Transaction Table -->
+                    <table class="table table-striped table-light">
+                    <thead>
+                        <tr>
+                        <th>Transaction Name</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let entry of newEntries; let i = index">
+                        <!-- Transaction Name -->
+                        <td>{{ entry.name }}</td>
+                        <!-- Amount -->
+                        <td>
+                            {{ entry.amount }}
+                        </td>
+                        <!-- Category -->
+                        <td>
+                            {{ entry.category}}
+                        </td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </div>          
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Cool
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
