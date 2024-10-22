@@ -64,7 +64,7 @@
                         <td>
                             <select class="form-select" [attr.id]="'dropdown ' + i">
                                 <option value="" selected disabled>Select category</option>
-                                <option *ngFor="let category of uniqueCategories.sort()" [value]="category">{{ category }}</option>
+                                <option *ngFor="let category of uniqueCategories" [value]="category">{{ category }}</option>
                             </select>
                         </td>
                     </tr>

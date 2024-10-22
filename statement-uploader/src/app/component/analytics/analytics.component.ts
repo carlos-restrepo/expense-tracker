@@ -56,6 +56,7 @@ export class AnalyticsComponent {
     this.transactionService.getCategories().subscribe(
       (categories) => {
         this.uniqueCategories = categories;
+        this.uniqueCategories.sort();
       }
     );
     
@@ -67,6 +68,7 @@ export class AnalyticsComponent {
         this.updateMonth();
         this.changeMonthCategoryChart();
         this.changeMonthTable();
+        console.log(this.dbSelected.length);
       }
     );
 
@@ -78,22 +80,42 @@ export class AnalyticsComponent {
 
   }
 
-  toggleSelectedMonthDb(): void {
-    this.dbSelected = [];
-
-    if(this.isDebitSelected){
-      this.dbSelected = this.dbSelected.concat(this.dbDebit);
-    }
-    if(this.isCreditSelected){
-      this.dbSelected = this.dbSelected.concat(this.dbCredit);
-    }
-
-    console.log(this.dbSelected)
-
-    this.changeMonth();
+  log(event:any){
+    console.log(event);
   }
 
-  updateMonth(): void {
+  toggleCategoryBlacklist(checkboxElementId: string){
+    const checkbox = document.getElementById(checkboxElementId) as HTMLInputElement;
+    checkbox.checked = !checkbox.checked;
+  }
+
+  toggleDebitMonthDb(): void {
+    if(!this.isDebitSelected){
+      this.isDebitSelected = !this.isDebitSelected      
+      this.dbSelected = this.dbSelected.concat(this.dbDebit);
+    }
+    else if(this.isCreditSelected && this.isDebitSelected){
+      this.isDebitSelected = !this.isDebitSelected      
+      this.dbSelected = this.dbCredit;
+    }
+
+    this.updateMonth();
+  }
+
+  toggleCreditMonthDb(): void {
+    if(!this.isCreditSelected){
+      this.isCreditSelected = !this.isCreditSelected      
+      this.dbSelected = this.dbSelected.concat(this.dbCredit);
+    }
+    else if(this.isCreditSelected && this.isDebitSelected){
+      this.isCreditSelected = !this.isCreditSelected      
+      this.dbSelected = this.dbDebit;
+    }
+
+    this.updateMonth();
+  }
+
+  updateSelectedDb(): void {
     this.selectedMonthDb  = this.dbSelected.filter( (val, i, obj) => {
       return val.yyyymm == this.selectedMonth;
     });
@@ -132,8 +154,8 @@ export class AnalyticsComponent {
     this.selectedMonth = this.uniqueYyyymm[0];
   }
 
-  changeMonth(){
-    this.updateMonth();
+  updateMonth(){
+    this.updateSelectedDb();
     this.changeMonthCategoryChart();
     this.changeMonthTable();
   }
@@ -193,6 +215,10 @@ export class AnalyticsComponent {
 
     this.monthTable.sort((a,b) => a.amount - b.amount);
     this.monthTable.reverse();
+  }
+
+  filterMonthTableCategories(category: string): void {
+    this.monthTable.filter(transaction => transaction.category === category);
   }
 
   findUniqueNames(): string[]{

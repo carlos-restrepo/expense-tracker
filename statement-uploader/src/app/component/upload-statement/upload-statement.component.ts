@@ -83,6 +83,8 @@ export class UploadStatementComponent {
     this.transactionService.getCategories().subscribe(
       (categories) => {
         this.uniqueCategories = categories;
+        this.uniqueCategories.sort(
+          (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       }
     );
 
