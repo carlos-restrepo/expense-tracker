@@ -29,10 +29,16 @@ export class UploadStatementComponent {
 
   csvData: any[] = [];
   dbEntries: any[] = [];
-  newEntries: any[] = [];
+  dbCategories: string[] = [];
+  dbAccounts: string[] = [];
+
+  newEntries: Transaction[] = [];
+  duplicateNewEntries: Transaction[] = [];
   uniqueNewFirstWords: Array<Array<string>> = [[],[]]; //[[unique first word], [common substring]]
   uniqueDbNames: string[] = [];
-  uniqueCategories: string[] = [];
+
+  selectedAccount: string = "";
+  newAccountName: string = "";
 
   file: any;
   fileReady: boolean = false;
@@ -40,8 +46,8 @@ export class UploadStatementComponent {
   fileProcessed: boolean = false;
 
   //Statement type flags
-  transactionFile: boolean = false;
-  debitFile: boolean = false;
+  isCibcCcFile: boolean = false;
+  isTdDebitFile: boolean = false;
   
   constructor(
     private transactionService: TransactionService,
@@ -55,13 +61,7 @@ export class UploadStatementComponent {
   //User clicks Submit, triggering: submitStatement -> fillCategores,saveEntries
 
   logAll(){
-    console.log(this.uniqueNewFirstWords);
-  }
-
-  enableProcessing(event:any):void {
-    if(event.srcElement.value){
-      this.fileReady = true;
-    }
+    console.log(this.newEntries);
   }
 
   createCategoryButton():void {
@@ -73,20 +73,37 @@ export class UploadStatementComponent {
     dialogRef.afterClosed().subscribe(
       newCategory => {
         if(newCategory != undefined){
-          this.uniqueCategories.push(newCategory);
-          this.uniqueCategories.sort();
+          this.dbCategories.push(newCategory);
+          this.dbCategories.sort();
         }
       });
+  }
+
+  newAccountButton(): void {
+    const newAccModalElement = <HTMLElement> document.getElementById("newAccountModal");
+    const newAccModal = new Modal(newAccModalElement)
+    newAccModal.show();
+  }
+
+  saveNewAccount(): void {
+    this.dbAccounts.push(this.newAccountName);
   }
 
   ngOnInit(){
     this.transactionService.getCategories().subscribe(
       (categories) => {
-        this.uniqueCategories = categories;
-        this.uniqueCategories.sort(
+        this.dbCategories = categories;
+        this.dbCategories.sort(
           (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       }
     );
+
+    this.transactionService.getAccounts().subscribe(
+      (accounts) => {
+        this.dbAccounts = accounts;
+        this.dbAccounts.sort();
+      }
+    )
 
   }
 
@@ -99,19 +116,21 @@ export class UploadStatementComponent {
     this.uniqueDbNames = [];
 
     this.file = event.target.files[0];
-    this.debitFile = false;
-    this.transactionFile = false;
+    this.isTdDebitFile = false;
+    this.isCibcCcFile = false;
+    this.fileReady = false;
     this.fileProcessed = false;
 
     if (this.file) {
       const fileName: string = event.target.files[0].name;
 
       if(fileName.includes("cibc")){
-        this.transactionFile = true;
+        this.isCibcCcFile = true;
         this.fileReady = true;
       }
       else if(fileName.includes("accountactivity")){
-        this.debitFile = true;
+        this.isTdDebitFile = true;
+        this.fileReady = true;
       }
       else{
         alert("File account not recognized");
@@ -124,21 +143,13 @@ export class UploadStatementComponent {
     //calls the right service and fills dbEntries
     this.dbEntries = [];
 
-    if(this.transactionFile){
-      this.transactionService.getAllTransactions().subscribe(
-        (trans: Transaction[]) => {
-          this.dbEntries = trans;
-        }
-      );
-    }
-    else if(this.debitFile){
-      this.debitService.getAllDebits().subscribe(
-        (debit: Debit[]) => {
-          this.dbEntries = debit;
-        }
-      );
-    }
-    this.findUniqueDbNames();
+    this.transactionService.getAllTransactions().subscribe(
+      (trans: Transaction[]) => {
+        this.dbEntries = trans;
+        this.findUniqueDbNames();
+      }
+    );
+    
   }
 
   findUniqueDbNames(): void{
@@ -146,11 +157,6 @@ export class UploadStatementComponent {
     this.uniqueDbNames = [];
 
     for(let entry of this.dbEntries){
-      if(entry.category){
-        if(!this.uniqueCategories.includes(entry.category)){
-          this.uniqueCategories.push(entry.category);
-        }
-      }
       if(!this.uniqueDbNames.includes(entry.name)){
         this.uniqueDbNames.push(entry.name);
       }
@@ -207,41 +213,48 @@ export class UploadStatementComponent {
       }
 
 
-      if(this.transactionFile){
+      if(this.isCibcCcFile){
         newEntry = {
           date: this.csvData[i][0],
           name: this.csvData[i][1],
           amount: balanceChange,
           yyyymm: this.csvData[i][0].substring(0,7),
           category: "",
-          account: "cibc",
-        } as Transaction;
+          account: this.selectedAccount,
+        };
       }
-      else if(this.debitFile){
-        const debitAccount: string = (<HTMLInputElement>document.getElementById("accountSelect")).value;
+      else if(this.isTdDebitFile){
         var dateParts = this.csvData[i][0].split("/")
         var formattedDate: string = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
         newEntry = {
           date: formattedDate,
           name: this.csvData[i][1],
           amount: balanceChange,
-          balance: parseFloat(this.csvData[i][4]),
           yyyymm: formattedDate.substring(0,7),
           category: "",
-          account: debitAccount,
-        } as Debit;
+          account: this.selectedAccount,
+        };
       }
-      if(this.uniqueDbNames.includes(this.csvData[i][1])){
-        newEntry.category = this.dbEntries.find(t => t.name === this.csvData[i][1])?.category;
+
+      if(this.uniqueDbNames.includes(newEntry.name)){
+        newEntry.category = this.dbEntries.find(t => t.name === newEntry.name)?.category;
+        if(!this.dbEntries.includes(newEntry)){
+          console.log('pushing entry');
+          this.newEntries.push(newEntry);
+        }
+        else{
+          this.duplicateNewEntries.push(newEntry);
+        }
       }
-      this.newEntries.push(newEntry);
+      else{
+        this.newEntries.push(newEntry);
+      }
     }
   }
   
   makeUniqueNewFirstWords(): void{
     //sets uniqueNewFirstWords
     //sets uniqueNewNameEntries
-
     this.uniqueNewFirstWords = [[],[]];
     var uniqueNewNameEntries = [];
 
@@ -300,7 +313,6 @@ export class UploadStatementComponent {
     //check if all categories are filled
     
     if (this.fillCategories()) { //check if all categories are filled
-
       this.saveEntries();
       const subModalElement = <HTMLElement> document.getElementById("submissionModal");
       const subModal = new Modal(subModalElement)
@@ -340,18 +352,9 @@ export class UploadStatementComponent {
       return a.date < b.date? -1: 1;
     })
 
-
-    if(this.debitFile){
-      for(let debit of this.newEntries){
-        this.debitService.createDebit(debit as Debit).subscribe();
-      }
+    for(let transaction of this.newEntries){
+      this.transactionService.createTransaction(transaction as Transaction).subscribe();
     }
-    else if(this.transactionFile){
-      for(let transaction of this.newEntries){
-        this.transactionService.createTransaction(transaction as Transaction).subscribe();
-      }
-    }
-    alert("Uploaded statement!");
   }
   //END Submit Statement Flow
 

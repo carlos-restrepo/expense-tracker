@@ -29,4 +29,8 @@ public class TransactionService {
     public List<String> getCategories() {
         return transactionRepository.getCategories();
     }
+
+    public List<String> getAccounts() {
+        return transactionRepository.getAccounts();
+    }
 }

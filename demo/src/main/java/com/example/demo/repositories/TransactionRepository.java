@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    @Query(value = "SELECT category FROM debit GROUP BY category UNION SELECT category FROM credit GROUP BY category", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT(category) as category FROM finances.transactions", nativeQuery = true)
     List<String> getCategories();
+
+    @Query(value = "SELECT DISTINCT(account) FROM finances.transactions", nativeQuery = true)
+    List<String> getAccounts();
 }

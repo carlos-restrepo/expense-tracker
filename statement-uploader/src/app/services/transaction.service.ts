@@ -22,4 +22,8 @@ export class TransactionService {
   getCategories(): Observable<string[]> {
     return this.http.get<string[]>(`${this.BASE_URL}/categories`);
   }
+
+  getAccounts(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}/accounts`);
+  }
 }

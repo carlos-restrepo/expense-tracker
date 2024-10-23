@@ -40,4 +40,9 @@ public class TransactionController {
     public List<String> getCategories() {
         return transactionService.getCategories();
     }
+
+    @GetMapping("/accounts")
+    public List<String> getAccounts() {
+        return transactionService.getAccounts();
+    }
 }
