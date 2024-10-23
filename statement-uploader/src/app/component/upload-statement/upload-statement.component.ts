@@ -29,7 +29,20 @@ export class UploadStatementComponent {
 
   csvData: any[] = [];
   dbEntries: any[] = [];
+
   dbCategories: string[] = [];
+  defaultCategories: string[] = [
+    "Groceries",
+    "Home",
+    "Car",
+    "Work",
+    "Restaurant",
+    "Transfers",
+    "Internal",
+    "Game",
+    "Fun"
+  ];
+
   dbAccounts: string[] = [];
 
   newEntries: Transaction[] = [];
@@ -40,14 +53,18 @@ export class UploadStatementComponent {
   selectedAccount: string = "";
   newAccountName: string = "";
 
+  transactionSet: string[] = [];
+  selectedTransactionSet: string = "";
+
   file: any;
   fileReady: boolean = false;
 
   fileProcessed: boolean = false;
 
   //Statement type flags
-  isCibcCcFile: boolean = false;
+  isCibcFile: boolean = false;
   isTdDebitFile: boolean = false;
+  isRogersFile: boolean = false;
   
   constructor(
     private transactionService: TransactionService,
@@ -61,7 +78,35 @@ export class UploadStatementComponent {
   //User clicks Submit, triggering: submitStatement -> fillCategores,saveEntries
 
   logAll(){
-    console.log(this.newEntries);
+    console.log(this.uniqueNewFirstWords);
+  }
+
+  splitTransactionSetModal(uniqueNewFirstWord: string): void {
+    this.transactionSet = [];
+    this.selectedTransactionSet = uniqueNewFirstWord;
+
+    for(let entry of this.newEntries){
+      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
+          && !this.transactionSet.includes(entry.name)){
+        this.transactionSet.push(entry.name);
+      }
+    }
+    
+    const splitTransactionSetModalElement = <HTMLElement> document.getElementById("splitTransactionSetModal");
+    const splitTransactionSetModal = new Modal(splitTransactionSetModalElement);
+    splitTransactionSetModal.show();
+  }
+
+  splitTransaction(): void {
+    var transactionSetIndex = this.uniqueNewFirstWords[1].indexOf(this.selectedTransactionSet);
+    this.uniqueNewFirstWords[0].splice(transactionSetIndex,1);
+    this.uniqueNewFirstWords[1].splice(transactionSetIndex,1);
+
+    this.uniqueNewFirstWords[0] = this.uniqueNewFirstWords[0].concat(this.transactionSet);
+    this.uniqueNewFirstWords[1] = this.uniqueNewFirstWords[1].concat(this.transactionSet);
+
+    this.transactionSet = [];
+    this.selectedTransactionSet = "";
   }
 
   createCategoryButton():void {
@@ -80,21 +125,34 @@ export class UploadStatementComponent {
   }
 
   newAccountButton(): void {
+    this.newAccountName = "";
+
     const newAccModalElement = <HTMLElement> document.getElementById("newAccountModal");
-    const newAccModal = new Modal(newAccModalElement)
+    const newAccModal = new Modal(newAccModalElement);
     newAccModal.show();
   }
 
   saveNewAccount(): void {
     this.dbAccounts.push(this.newAccountName);
+    setTimeout(() => {
+      const newAccountSelectOption = <HTMLOptionElement> document.getElementById(this.newAccountName);
+      if(newAccountSelectOption){
+        newAccountSelectOption.selected = true;
+      }
+      else{
+        console.error("New Account option element not found.")
+      }
+    }, 300);
+    this.selectedAccount = this.newAccountName;
   }
 
   ngOnInit(){
     this.transactionService.getCategories().subscribe(
       (categories) => {
-        this.dbCategories = categories;
-        this.dbCategories.sort(
-          (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        this.dbCategories = [...new Set([...categories, ...this.defaultCategories])];
+
+        this.dbCategories.sort();
+
       }
     );
 
@@ -116,8 +174,11 @@ export class UploadStatementComponent {
     this.uniqueDbNames = [];
 
     this.file = event.target.files[0];
+
     this.isTdDebitFile = false;
-    this.isCibcCcFile = false;
+    this.isCibcFile = false;
+    this.isRogersFile = false;
+
     this.fileReady = false;
     this.fileProcessed = false;
 
@@ -125,11 +186,15 @@ export class UploadStatementComponent {
       const fileName: string = event.target.files[0].name;
 
       if(fileName.includes("cibc")){
-        this.isCibcCcFile = true;
+        this.isCibcFile = true;
         this.fileReady = true;
       }
       else if(fileName.includes("accountactivity")){
         this.isTdDebitFile = true;
+        this.fileReady = true;
+      }
+      else if(fileName.includes("Transaction History")){
+        this.isRogersFile = true;
         this.fileReady = true;
       }
       else{
@@ -168,6 +233,8 @@ export class UploadStatementComponent {
   readCsv(): void{
     // Use FileReader to read the file into csvData
     this.csvData = [];
+    var fileHeadings: boolean = false;
+
     const reader = new FileReader();
     reader.readAsText(this.file);
 
@@ -198,6 +265,11 @@ export class UploadStatementComponent {
     //removes empty entry at the end
     this.csvData.splice(this.csvData.length - 1, 1);
 
+    //remove headers from Rogers files
+    if(this.isRogersFile){
+      this.csvData.splice(0, 1);
+    }
+
     //Should be upgraded to check if first word of new transaction matches first word of present uniqueDbNames
     for(let i = this.csvData.length - 1; i > -1; i--){
 
@@ -205,6 +277,7 @@ export class UploadStatementComponent {
       let balanceChange: number = 0;
 
       //this decides whether the entry is an loss or a gain
+      //only for Cibc and TdDebit
       if(this.csvData[i][2]){
         balanceChange = parseFloat(this.csvData[i][2]) * -1;
       }
@@ -213,10 +286,16 @@ export class UploadStatementComponent {
       }
 
 
-      if(this.isCibcCcFile){
+      if(this.isCibcFile){
+        var transName = this.csvData[i][1];
+        const splitNameList = transName.split(" ").slice(0, -2);
+        if(splitNameList.length > 0){
+          transName = splitNameList.join(" ");
+        }
+
         newEntry = {
           date: this.csvData[i][0],
-          name: this.csvData[i][1],
+          name: transName,
           amount: balanceChange,
           yyyymm: this.csvData[i][0].substring(0,7),
           category: "",
@@ -234,6 +313,17 @@ export class UploadStatementComponent {
           category: "",
           account: this.selectedAccount,
         };
+      }
+      else if(this.isRogersFile){
+        //rogers files handle negative values as gains
+        newEntry = {
+          date: this.csvData[i][0],
+          name: this.csvData[i][7],
+          amount: -1 * parseFloat(this.csvData[i][12].replace("$", '').replace(",","")),
+          yyyymm: this.csvData[i][0].substring(0,7),
+          category: "",
+          account: this.selectedAccount,
+        }
       }
 
       if(this.uniqueDbNames.includes(newEntry.name)){
@@ -298,7 +388,8 @@ export class UploadStatementComponent {
     var total: number = 0;
 
     for(let entry of this.newEntries){
-      if(entry.name.indexOf(uniqueName) >= 0){
+      if(entry.name.indexOf(uniqueName) >= 0
+          && uniqueName.indexOf(entry.name.split(" ")[0]) >= 0){
         total += entry.amount;
       }
     }
@@ -313,7 +404,8 @@ export class UploadStatementComponent {
     //check if all categories are filled
     
     if (this.fillCategories()) { //check if all categories are filled
-      this.saveEntries();
+      // this.saveEntries();
+      console.log(this.newEntries)
       const subModalElement = <HTMLElement> document.getElementById("submissionModal");
       const subModal = new Modal(subModalElement)
       subModal.show();

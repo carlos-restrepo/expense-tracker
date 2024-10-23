@@ -5,27 +5,30 @@
 
   <div class="row bg-light border shadow rounded-pill my-3 p-4">
     <div class="col-4">
-      <button class="btn rounded-pill mx-1"
-              [ngClass]="isCreditSelected ? 'btn-warning' : 'btn-secondary'"
-              (click)="toggleCreditMonthDb()">
-        Credit Account
-      </button>
-      <button class="btn rounded-pill mx-1"
-              [ngClass]="isDebitSelected ? 'btn-warning' : 'btn-secondary'"
-              (click)="toggleDebitMonthDb()">
-        Debit Account
-      </button>
+      <div class="d-flex dropdown">
+        <button class="btn btn-warning rounded-pill dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            Selected Accounts
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <li *ngFor="let account of dbAccounts">
+              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleAccounts(account)">
+                  <input type="checkbox" checked id="{{account}}" value="{{account}}">
+                  <label class="ps-2" for="{{account}}" style="user-select: none;">{{ account }}</label>
+              </div>
+            </li>
+        </ul>
+    </div>
     </div>
     <div class="col-6">
       
     </div>
     <div class="col-2">
       <div class="d-flex dropdown">
-        <button class="btn btn-warning dropdown-toggle ms-auto" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn btn-dark dropdown-toggle ms-auto" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
             Blacklist Categories
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <li *ngFor="let category of uniqueCategories">
+            <li *ngFor="let category of dbCategories">
               <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleCategoryBlacklist(category)">
                   <input type="checkbox" id="{{category}}Blacklist" value="{{category}}Blacklist">
                   <label class="ps-2" for="{{category}}Blacklist" style="user-select: none;">{{ category }}</label>
