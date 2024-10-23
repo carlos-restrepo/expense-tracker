@@ -28,10 +28,11 @@ export class AnalyticsComponent {
   dbDebit: Transaction[] = [];
   dbCredit: Transaction[] = [];
 
-  isDebitSelected: boolean = false;
+  isDebitSelected: boolean = true;
   isCreditSelected: boolean = true;
 
   uniqueCategories: string[] = [];
+  selectedCategories: string[] = [];
   uniqueYyyymm: string[] = [];
 
   displayAnalytics: boolean = false;
@@ -45,48 +46,40 @@ export class AnalyticsComponent {
 
   monthTable: any[] = [];
 
+  //category blacklist is applied to db
   
   constructor(
     private transactionService: TransactionService,
     private debitService: DebitService,
   ) { }
 
-  ngOnInit(){
-
-    this.transactionService.getCategories().subscribe(
-      (categories) => {
-        this.uniqueCategories = categories;
-        this.uniqueCategories.sort();
-      }
-    );
-    
-    this.transactionService.getAllTransactions().subscribe(
-      (trans: Transaction[]) => {
-        this.dbCredit = trans;
-        this.dbSelected = trans;
-        this.getUniqueYyyymm();
-        this.updateMonth();
-        this.changeMonthCategoryChart();
-        this.changeMonthTable();
-        console.log(this.dbSelected.length);
-      }
-    );
-
-    this.debitService.getAllDebits().subscribe(
-      (debit: Transaction[]) => {
-        this.dbDebit = debit;
-      }
-    )
-
+  log(){
+    console.log('categories')
+    console.log(this.uniqueCategories);
+    console.log('select categories')
+    console.log(this.selectedCategories);
   }
 
-  log(event:any){
-    console.log(event);
-  }
-
-  toggleCategoryBlacklist(checkboxElementId: string){
-    const checkbox = document.getElementById(checkboxElementId) as HTMLInputElement;
+  toggleCategoryBlacklist(category: string){
+    const checkbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
+    checkbox.disabled = true;
     checkbox.checked = !checkbox.checked;
+
+    setTimeout(() => {
+      checkbox.disabled = false;
+  }, 300);
+
+    if(checkbox.checked) { //If category just blacklisted, remove from selectedCategories
+      const categoryIndex = this.selectedCategories.indexOf(category);
+      if(categoryIndex > -1){
+        this.selectedCategories.splice(categoryIndex, 1);
+      }
+    } 
+    else{
+      this.selectedCategories.push(category);
+    }
+    
+    this.updateMonth();
   }
 
   toggleDebitMonthDb(): void {
@@ -115,33 +108,35 @@ export class AnalyticsComponent {
     this.updateMonth();
   }
 
-  updateSelectedDb(): void {
-    this.selectedMonthDb  = this.dbSelected.filter( (val, i, obj) => {
-      return val.yyyymm == this.selectedMonth;
-    });
+  ngOnInit(){
 
-    this.monthTotal = this.selectedMonthDb.map( v => v.amount).reduce(
-      (total, current) => {
-        return total += current * -1;
-      }, 0
-    );
-
-    var previousMonth = this.uniqueYyyymm.at(
-      this.uniqueYyyymm.indexOf(this.selectedMonth) + 1
+    this.transactionService.getCategories().subscribe(
+      (categories) => {
+        this.uniqueCategories = this.uniqueCategories.concat(categories);
+        this.selectedCategories = this.selectedCategories.concat(categories);
+        this.uniqueCategories.sort();
+      }
     );
     
-    var previousMonthCredit = this.dbSelected.filter( (val, i, obj) => {
-      return val.yyyymm == previousMonth;
-    });
-
-    this.previousMonthTotal = previousMonthCredit.map( v => v.amount).reduce(
-      (total, current) => {
-        return total += current * -1;
-      }, 0
+    this.transactionService.getAllTransactions().subscribe(
+      (trans: Transaction[]) => {
+        this.dbCredit = trans;
+        this.dbSelected = this.dbSelected.concat(trans);
+        this.getUniqueYyyymm();
+        this.updateMonth();
+      }
     );
+
+    this.debitService.getAllDebits().subscribe(
+      (debit: Transaction[]) => {
+        this.dbDebit = debit;
+        this.dbSelected = this.dbSelected.concat(debit);
+        this.getUniqueYyyymm();
+        this.updateMonth();
+      }
+    )
+
   }
-
-
 
   getUniqueYyyymm(): void{
     this.uniqueYyyymm = this.dbSelected.map(v => v.yyyymm).filter((val, i, arr) => {
@@ -160,6 +155,32 @@ export class AnalyticsComponent {
     this.changeMonthTable();
   }
 
+  updateSelectedDb(): void {
+    this.selectedMonthDb  = this.dbSelected.filter( (val, i, obj) => {
+      return val.yyyymm == this.selectedMonth && this.selectedCategories.includes(val.category);
+    });
+
+    this.monthTotal = this.selectedMonthDb.map( v => v.amount).reduce(
+      (total, current) => {
+        return total += current * -1;
+      }, 0
+    );
+
+    var previousMonth = this.uniqueYyyymm.at(
+      this.uniqueYyyymm.indexOf(this.selectedMonth) + 1
+    );
+    
+    var previousMonthDb = this.dbSelected.filter( (val, i, obj) => {
+      return val.yyyymm == previousMonth && this.selectedCategories.includes(val.category);
+    });
+
+    this.previousMonthTotal = previousMonthDb.map( v => v.amount).reduce(
+      (total, current) => {
+        return total += current * -1;
+      }, 0
+    );
+  }
+
   changeMonthCategoryChart(): void{
     this.monthlyChart = new CanvasJS.Chart("monthlyChart", {
       theme: "light2",
@@ -175,7 +196,7 @@ export class AnalyticsComponent {
     
      var monthlyDataPoints = [];
 
-    for(let category of this.uniqueCategories){
+    for(let category of this.selectedCategories){
       monthlyDataPoints.push({
         label: category,
         y: 0,

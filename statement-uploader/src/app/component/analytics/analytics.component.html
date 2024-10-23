@@ -17,7 +17,7 @@
       </button>
     </div>
     <div class="col-6">
-
+      
     </div>
     <div class="col-2">
       <div class="d-flex dropdown">
@@ -25,29 +25,11 @@
             Blacklist Categories
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <li>
-                <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleCategoryBlacklist('option1')">
-                    <input type="checkbox" id="option1" value="option1" (click)="$event.stopPropagation()">
-                    <label for="option1">Option 1</label>
-                </div>
-            </li>
-            <li>
-                <div class="dropdown-item">
-                    <input type="checkbox" id="option2" value="option2">
-                    <label for="option2">Option 2</label>
-                </div>
-            </li>
-            <li>
-                <div class="dropdown-item">
-                    <input type="checkbox" id="option3" value="option3">
-                    <label for="option3">Option 3</label>
-                </div>
-            </li>
-            <li>
-                <div class="dropdown-item">
-                    <input type="checkbox" id="option4" value="option4">
-                    <label for="option4">Option 4</label>
-                </div>
+            <li *ngFor="let category of uniqueCategories">
+              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleCategoryBlacklist(category)">
+                  <input type="checkbox" id="{{category}}Blacklist" value="{{category}}Blacklist">
+                  <label class="ps-2" for="{{category}}Blacklist" style="user-select: none;">{{ category }}</label>
+              </div>
             </li>
         </ul>
     </div>

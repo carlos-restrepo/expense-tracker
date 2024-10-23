@@ -2,3 +2,8 @@
     overflow-y: scroll;
     max-height: 400px;
 }
+
+.dropdown-menu{
+    max-height: 300px;
+    overflow-y: scroll;
+}
