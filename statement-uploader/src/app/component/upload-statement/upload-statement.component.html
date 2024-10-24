@@ -22,7 +22,7 @@
                     </option>
                 </select>
                 <span class="input-group-text">
-                    <button class="btn btn-warning rounded-circle"
+                    <button class="btn btn-warning rounded-circle fs-5"
                             (click)="newAccountButton()">
                         <i class="bi bi-plus"></i>
                     </button>
@@ -76,14 +76,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr *ngFor="let entry of uniqueNewFirstWords[1]; let i = index">
+                                <tr *ngFor="let name of uniqueNewFirstWords[1]; let i = index">
                                     <!-- Transaction Name -->
                                     <td>
-                                        <button class="btn border" (click)="splitTransactionSetModal(entry)">{{ entry }}</button>
+                                        @if(checkHasMultipleTransactions(name)){
+                                            <button class="btn transaction-set" (click)="splitTransactionSetModal(name)">{{ name }}</button>
+                                        }
+                                        @else{
+                                            <p class="ps-2">
+                                                {{ name }}
+                                            </p>
+                                        }
                                     </td>
                                     <!-- Amount -->
                                     <td>
-                                        {{ sumUniqueNewFirstWord(entry) }}
+                                        {{ sumUniqueNewFirstWord(name) }}
                                     </td>
                                     <!-- Category -->
                                     <td>

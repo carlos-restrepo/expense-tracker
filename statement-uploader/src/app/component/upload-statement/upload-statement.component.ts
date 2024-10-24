@@ -81,6 +81,19 @@ export class UploadStatementComponent {
     console.log(this.uniqueNewFirstWords);
   }
 
+  checkHasMultipleTransactions(uniqueNewFirstWord: string): boolean {
+    var uniqueTransactionNames:string[] = [];
+
+    for(let entry of this.newEntries){
+      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
+          && !uniqueTransactionNames.includes(entry.name)){
+        uniqueTransactionNames.push(entry.name);
+        if(uniqueTransactionNames.length > 1){ return true;}
+      }
+    }
+    return false;
+  }
+
   splitTransactionSetModal(uniqueNewFirstWord: string): void {
     this.transactionSet = [];
     this.selectedTransactionSet = uniqueNewFirstWord;

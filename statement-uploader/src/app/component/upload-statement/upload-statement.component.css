@@ -1,0 +1,8 @@
+.transaction-set{
+    border-color: goldenrod;
+    
+}
+
+.transaction-set:hover{
+    background-color:blanchedalmond;
+}
