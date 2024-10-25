@@ -1,8 +1,10 @@
-.transaction-set{
+
+
+.bg-light-yellow{
     border-color: goldenrod;
     
 }
 
-.transaction-set:hover{
-    background-color:blanchedalmond;
+.bg-light-yellow:hover{
+    background-color:#f9e3a7;
 }

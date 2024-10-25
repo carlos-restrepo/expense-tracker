@@ -7,3 +7,18 @@
     max-height: 300px;
     overflow-y: scroll;
 }
+
+
+
+.btn-light-yellow{
+    border-color: goldenrod;
+    
+}
+
+.btn-light-yellow:hover{
+    background-color:#f9e3a7;
+}
+
+.bg-light-yellow{
+    background-color:#f9e3a7;
+}

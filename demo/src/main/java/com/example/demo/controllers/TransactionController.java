@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,11 +32,6 @@ public class TransactionController {
         return temp;
     }
 
-    @PostMapping
-    public Transaction saveTransaction(@RequestBody Transaction transaction) {
-        return transactionService.saveTransaction(transaction);
-    }
-
     @GetMapping("/categories")
     public List<String> getCategories() {
         return transactionService.getCategories();
@@ -44,5 +40,15 @@ public class TransactionController {
     @GetMapping("/accounts")
     public List<String> getAccounts() {
         return transactionService.getAccounts();
+    }
+
+    @PostMapping
+    public Transaction saveTransaction(@RequestBody Transaction transaction) {
+        return transactionService.saveTransaction(transaction);
+    }
+
+    @PutMapping
+    public Transaction updateTransaction(@RequestBody Transaction transaction) {
+        return transactionService.updateTransaction(transaction);
     }
 }

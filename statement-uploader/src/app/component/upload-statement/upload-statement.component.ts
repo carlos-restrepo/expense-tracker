@@ -40,7 +40,12 @@ export class UploadStatementComponent {
     "Transfers",
     "Internal",
     "Game",
-    "Fun"
+    "Fun",
+    "Pets",
+    "Online Shopping",
+    "Health",
+    "Clothes",
+    "Taxes"
   ];
 
   dbAccounts: string[] = [];
@@ -198,15 +203,16 @@ export class UploadStatementComponent {
     if (this.file) {
       const fileName: string = event.target.files[0].name;
 
-      if(fileName.includes("cibc")){
+      if(fileName.indexOf("cibc") > -1){
         this.isCibcFile = true;
         this.fileReady = true;
       }
-      else if(fileName.includes("accountactivity")){
+      else if(fileName.indexOf("accountactivity") > -1){
         this.isTdDebitFile = true;
         this.fileReady = true;
       }
-      else if(fileName.includes("Transaction History")){
+      else if(fileName.indexOf("Transaction") > -1
+              && fileName.indexOf("History") > -1){
         this.isRogersFile = true;
         this.fileReady = true;
       }
@@ -417,8 +423,7 @@ export class UploadStatementComponent {
     //check if all categories are filled
     
     if (this.fillCategories()) { //check if all categories are filled
-      // this.saveEntries();
-      console.log(this.newEntries)
+      this.saveEntries();
       const subModalElement = <HTMLElement> document.getElementById("submissionModal");
       const subModal = new Modal(subModalElement)
       subModal.show();
@@ -436,15 +441,16 @@ export class UploadStatementComponent {
       const dropdownElement = (<HTMLInputElement>document.getElementById("dropdown " + i));
       if(dropdownElement){
         for(let entry of this.newEntries){
-          if(entry.name.split(" ")[0] === this.uniqueNewFirstWords[0][i]){
+          if(entry.name.indexOf(this.uniqueNewFirstWords[1][i]) === 0){
             entry.category = dropdownElement.value;
           }
         }
       }
     }
 
+    //check for entries with empty category
     for(let entry of this.newEntries){
-      if(entry.category == ''){ return false;}
+      if(entry.category == ''){ console.log(entry); return false;}
     }
     return true;
   }

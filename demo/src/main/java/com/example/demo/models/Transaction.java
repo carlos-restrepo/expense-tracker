@@ -1,5 +1,7 @@
 package com.example.demo.models;
 
+import com.example.demo.constants.TableConstant;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -7,11 +9,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = TableConstant.NAME)
 public class Transaction {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private int id;
+        private Long id;
         private String date = "";
         private String name = "";
         private float amount = 0;
@@ -30,6 +32,10 @@ public class Transaction {
                 this.yyyymm = yyyymm;
                 this.category = category;
                 this.account = account;
+        }
+
+        public Long getId() {
+                return id;
         }
 
         public String getDate() {

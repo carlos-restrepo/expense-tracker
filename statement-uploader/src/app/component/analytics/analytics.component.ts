@@ -1,12 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { DebitService } from '../../services/debit.service';
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction } from '../../models/transaction.model';
 import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { filter } from 'rxjs';
 import { MonYearPipe } from '../../pipes/mon-year.pipe';
+import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
+import { MatDialog } from '@angular/material/dialog';
+import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
 declare const CanvasJS: any;
 
 @Component({
@@ -16,7 +18,7 @@ declare const CanvasJS: any;
     HttpClientModule,
     CommonModule,
     FormsModule,
-    MonYearPipe
+    MonYearPipe,
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
@@ -24,12 +26,10 @@ declare const CanvasJS: any;
 export class AnalyticsComponent {
 
   dbTransactions: Transaction[] = [];
-
-  isDebitSelected: boolean = true;
-  isCreditSelected: boolean = true;
+  filteredDbTransactions: Transaction[] = [];
 
   dbCategories: string[] = [];
-  selectedCategories: string[] = [];
+  blacklistCategories: string[] = [];
   
   dbAccounts: string[] = [];
   selectedAccounts: string[] = [];
@@ -39,89 +39,43 @@ export class AnalyticsComponent {
   displayAnalytics: boolean = false;
   selectedMonth: string = "";
 
-  chartOptions: any;
-  monthlyChart: any;
+  monthChart: any;
+  overtimeChart: any;
+
   selectedMonthDb: Transaction[] = [];
   monthTotal: number = 0;
   previousMonthTotal: number = 0;
-
   monthTable: any[] = [];
 
-  //category blacklist is applied to db
+
+
+  // Initializers
   
   constructor(
     private transactionService: TransactionService,
-    private debitService: DebitService,
+    private monYearPipe: MonYearPipe,
+    private dialog: MatDialog,
   ) { }
-
-  log(){
-    console.log('categories')
-    console.log(this.dbCategories);
-    console.log('select categories')
-    console.log(this.selectedCategories);
-  }
-
-  toggleCategoryBlacklist(category: string){
-    const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
-    categoryCheckbox.disabled = true;
-    categoryCheckbox.checked = !categoryCheckbox.checked;
-
-    setTimeout(() => {
-      categoryCheckbox.disabled = false;
-  }, 300);
-
-    if(categoryCheckbox.checked) { //If category just blacklisted, remove from selectedCategories
-      const categoryIndex = this.selectedCategories.indexOf(category);
-      if(categoryIndex > -1){
-        this.selectedCategories.splice(categoryIndex, 1);
-      }
-    } 
-    else{
-      this.selectedCategories.push(category);
-    }
-    
-    this.updateMonth();
-  }
-
-  toggleAccounts(account: string): void {
-    const accountCheckbox = document.getElementById(account) as HTMLInputElement;
-    accountCheckbox.disabled = true;
-    accountCheckbox.checked = !accountCheckbox.checked;
-
-    setTimeout(() => {
-      accountCheckbox.disabled = false;
-    }, 300);
-
-    if(!accountCheckbox.checked) { //If category just blacklisted, remove from selectedCategories
-      const accountIndex = this.selectedAccounts.indexOf(account);
-      if(accountIndex > -1){
-        this.selectedAccounts.splice(accountIndex, 1);
-      }
-    } 
-    else{
-      this.selectedAccounts.push(account);
-    }
-
-    this.updateMonth();
-  }
-
-
-
-  toggleCreditMonthDb(): void {
-    if(!this.isCreditSelected){
-      this.isCreditSelected = !this.isCreditSelected      
-      this.dbTransactions = this.dbTransactions.concat(this.dbTransactions);
-    }
-
-    this.updateMonth();
-  }
 
   ngOnInit(){
 
     this.transactionService.getCategories().subscribe(
       (categories) => {
         this.dbCategories = this.dbCategories.concat(categories);
-        this.selectedCategories = this.selectedCategories.concat(categories);
+        this.blacklistCategories = this.blacklistCategories.concat(categories);
+        this.blacklistCategories.splice(
+          this.blacklistCategories.indexOf("Internal"),1
+        );
+        this.blacklistCategories.splice(
+          this.blacklistCategories.indexOf("Transfers"),1
+        );
+
+        setTimeout(() => {
+          const categoryCheckbox = document.getElementById("Internal" + 'Blacklist') as HTMLInputElement;
+          categoryCheckbox.checked = true;
+          const cat2 = document.getElementById("Transfers" + 'Blacklist') as HTMLInputElement;
+          cat2.checked = true;
+      }, 300);
         this.dbCategories.sort();
       }
     );
@@ -138,13 +92,15 @@ export class AnalyticsComponent {
       (trans: Transaction[]) => {
         this.dbTransactions = trans;
         this.getUniqueYyyymm();
+        this.updateFilteredDbTransactions();
         this.updateMonth();
+        this.updateOvertimeChart();
       }
     );
 
   }
 
-  getUniqueYyyymm(): void{
+  getUniqueYyyymm(): void {
     this.uniqueYyyymm = this.dbTransactions.map(v => v.yyyymm).filter((val, i, arr) => {
       return arr.indexOf(val) === i;
     });
@@ -155,6 +111,171 @@ export class AnalyticsComponent {
     this.selectedMonth = this.uniqueYyyymm[0];
   }
 
+  updateOvertimeChart(): void {
+    this.overtimeChart = new CanvasJS.Chart("overtimeChart", {
+      theme: "light2",
+      title: {
+        text: "Total Change over Time"
+      },
+      axisY: {
+        interlacedColor: "#fff9f9", 
+        valueFormatString:  "#,##0.##", // move comma to change formatting
+        prefix: "$"
+      },
+      animationEnabled: true,
+      data: [{
+        type: "line",
+        indexLabel: "{y}",
+        dataPoints: [],
+      }]
+    });
+
+    var monthlyTotals = [];
+
+    for(let month of this.uniqueYyyymm.sort()){
+      var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
+        return val.yyyymm === month;
+      }).map(e => e.amount)
+
+      var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
+        return acc + curr;
+      }, 0).toFixed(0);
+
+      monthlyTotals.push({
+        label: this.monYearPipe.transform(month), 
+        y: monthTotal,
+        indexLabelFormatter: (e:any) => {
+          return e.dataPoint.y < 0? "\u2800-$" + (-1*e.dataPoint.y) + "\u2800" : "\u2800$" + e.dataPoint.y + "\u2800"
+        },
+        indexLabelBorderColor: "#333333",
+        indexLabelBorderThickness: 0.5,
+        indexLabelFontSize: 15,
+        indexLabelFontColor: "#000000",
+        indexLabelBackgroundColor: "#f9e3a7"
+      })
+    }
+
+    this.overtimeChart.options.data[0].dataPoints = monthlyTotals;
+    this.overtimeChart.render();
+  }
+
+  //Button Functions
+
+  log(){
+    console.log('categories')
+    console.log(this.dbCategories);
+    console.log('select categories')
+    console.log(this.blacklistCategories);
+  }
+
+  toggleCategoryBlacklist(category: string){
+    const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+  }, 300);
+
+    if(categoryCheckbox.checked) { //If category just blacklisted, remove from blacklistCategories
+      const categoryIndex = this.blacklistCategories.indexOf(category);
+      if(categoryIndex > -1){
+        this.blacklistCategories.splice(categoryIndex, 1);
+      }
+    } 
+    else{
+      this.blacklistCategories.push(category);
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+    this.updateOvertimeChart();
+  }
+
+  toggleAccounts(account: string): void {
+    const accountCheckbox = document.getElementById(account) as HTMLInputElement;
+    accountCheckbox.disabled = true;
+    accountCheckbox.checked = !accountCheckbox.checked;
+
+    setTimeout(() => {
+      accountCheckbox.disabled = false;
+    }, 300);
+
+    if(!accountCheckbox.checked) {
+      const accountIndex = this.selectedAccounts.indexOf(account);
+      if(accountIndex > -1){
+        this.selectedAccounts.splice(accountIndex, 1);
+      }
+    } 
+    else{
+      this.selectedAccounts.push(account);
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+    this.updateOvertimeChart();
+  }
+
+  updateFilteredDbTransactions(): void {
+    this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
+      return this.blacklistCategories.includes(val.category)
+          && this.selectedAccounts.includes(val.account);
+    });
+  }
+
+  createCategoryButton(transaction: Transaction):void {
+    const dialogRef = this.dialog.open(NewCategoryComponent,{
+      width: "400px",
+      height: "300px",
+    });
+
+    dialogRef.afterClosed().subscribe(
+      newCategory => {
+        if(newCategory != undefined){
+          // this.dbCategories.push(newCategory);
+          // this.dbCategories.sort();
+          const confirmDialogRef = this.dialog.open(UpdateCategoryConfirmComponent,{
+            data: {
+              name: transaction.name,
+              category: transaction.category,
+              newCategory: newCategory
+            }
+          });
+
+          confirmDialogRef.afterClosed().subscribe(result => {
+            if(result){
+              this.changeTransactionCategory(transaction.name, newCategory);
+            }
+          })
+        }
+        else{
+          alert("Canceled by invalid category");
+        }
+      });
+  }
+
+  changeTransactionCategory(name: string, newCategory: string): void {
+
+    var transactionNameList = this.dbTransactions.filter(val => val.name === name);
+
+    for(let transaction of transactionNameList){
+      console.log(transaction.name);
+      console.log(transaction.date);
+
+      transaction.category = newCategory;
+
+      if(transaction){
+        console.log(transaction.category);
+        this.transactionService.updateTransactionNameCategory(transaction).subscribe();
+      }
+    }
+
+    this.updateFilteredDbTransactions();
+
+  }
+
+  //Monthly Analytics
+
   updateMonth(){
     this.updateSelectedDb();
     this.changeMonthCategoryChart();
@@ -162,10 +283,8 @@ export class AnalyticsComponent {
   }
 
   updateSelectedDb(): void {
-    this.selectedMonthDb  = this.dbTransactions.filter( (val, i, obj) => {
-      return val.yyyymm == this.selectedMonth 
-      && this.selectedCategories.includes(val.category)
-      && this.selectedAccounts.includes(val.account);
+    this.selectedMonthDb  = this.filteredDbTransactions.filter( (val, i, obj) => {
+      return val.yyyymm == this.selectedMonth
     });
 
     this.monthTotal = this.selectedMonthDb.map( v => v.amount).reduce(
@@ -175,12 +294,12 @@ export class AnalyticsComponent {
     );
 
     var previousMonth = this.uniqueYyyymm.at(
-      this.uniqueYyyymm.indexOf(this.selectedMonth) + 1
+      this.uniqueYyyymm.indexOf(this.selectedMonth) - 1
     );
     
-    var previousMonthDb = this.dbTransactions.filter( (val, i, obj) => {
+    var previousMonthDb = this.filteredDbTransactions.filter( (val, i, obj) => {
       return val.yyyymm == previousMonth 
-      && this.selectedCategories.includes(val.category)
+      && this.blacklistCategories.includes(val.category)
       && this.selectedAccounts.includes(val.account);
     });
 
@@ -192,7 +311,7 @@ export class AnalyticsComponent {
   }
 
   changeMonthCategoryChart(): void{
-    this.monthlyChart = new CanvasJS.Chart("monthlyChart", {
+    this.monthChart = new CanvasJS.Chart("monthChart", {
       theme: "light2",
       title: {
       },
@@ -204,30 +323,40 @@ export class AnalyticsComponent {
       }]
     });
     
-     var monthlyDataPoints = [];
+     var monthDataPoints = [];
 
-    for(let category of this.selectedCategories){
-      monthlyDataPoints.push({
+    for(let category of this.blacklistCategories){
+      monthDataPoints.push({
         label: category,
         y: 0,
+        indexLabelFormatter: (e:any) => {
+          return "\u2800$" + e.dataPoint.y + "\u2800"
+        },
+        indexLabelFontSize: 15,
+        indexLabelFontColor: "#000000",
+        indexLabelBackgroundColor: "#f9e3a7"
       });
     }
     
     var monthTotal = 0;
 
     for(let entry of this.selectedMonthDb){
-      var dataPt = monthlyDataPoints.find( ({ label }) => label === entry.category);
+      var dataPt = monthDataPoints.find( ({ label }) => label === entry.category);
 
       if(dataPt != undefined){
         dataPt.y += entry.amount * -1;
       }
     }
 
-    monthlyDataPoints.sort((a,b) => a.y - b.y); //sort and cut off top 5
-    monthlyDataPoints = monthlyDataPoints.slice(-5);
+    for(let dataPt of monthDataPoints){
+      dataPt.y = +dataPt.y.toFixed(0);
+    }
+
+    monthDataPoints.sort((a,b) => a.y - b.y); //sort and cut off top 5
+    monthDataPoints = monthDataPoints.slice(-5);
     
-    this.monthlyChart.options.data[0].dataPoints = monthlyDataPoints;
-    this.monthlyChart.render();
+    this.monthChart.options.data[0].dataPoints = monthDataPoints;
+    this.monthChart.render();
   }
 
   changeMonthTable():void {
@@ -251,6 +380,8 @@ export class AnalyticsComponent {
   filterMonthTableCategories(category: string): void {
     this.monthTable.filter(transaction => transaction.category === category);
   }
+
+  // changeMonthTable Helpers
 
   findUniqueNames(): string[]{
     var uniqueNames: string[] = [];

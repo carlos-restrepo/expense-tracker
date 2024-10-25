@@ -24,6 +24,7 @@
     "@angular/router": "^17.3.0",
     "@canvasjs/angular-charts": "^1.2.0",
     "@canvasjs/charts": "^3.10.12",
+    "@material/button": "^15.0.0-canary.7f224ddd4.0",
     "@types/bootstrap": "^5.2.10",
     "bootstrap": "^5.3.3",
     "canvasjs": "^1.8.3",
