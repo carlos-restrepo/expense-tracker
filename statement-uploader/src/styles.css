@@ -1,8 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
 
-
 html, body {
+    top: 0 !important;
+    left: 0 !important;
     height: 100%; 
     overflow-x: hidden; /* Prevent horizontal scrolling */
     margin: 0;
@@ -14,8 +15,15 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     max-width: 100%; /* Ensure container doesn't exceed viewport width */
   }
 
-.min-vh-70{
-    min-height: 70vh;
+
+.form-select option[value="placeholder"] {
+    display:none
+}
+
+.sticky-div {
+    position: sticky !important;
+    top: 0;
+    z-index: 1000; /* Adjust as needed to ensure it stays on top of other elements */
 }
 
 .bg-dark-yellow{
@@ -27,13 +35,63 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 }
 
 .bg-light-yellow{
-    border-color: goldenrod;
+    background-color:#f9e3a7 !important;
     
 }
 
-.bg-light-yellow:hover{
-    background-color:#f9e3a7;
+.bg-light-yellow-hover{
+    border-color: goldenrod !important;
+    
 }
+
+.bg-light-yellow-hover:hover{
+    background-color:#f9e3a7 !important;
+}
+
+.min-vh-10 {
+    min-height: 10vh;
+}
+
+.min-vh-20 {
+    min-height: 20vh;
+}
+
+.min-vh-30 {
+    min-height: 30vh;
+}
+
+.min-vh-40 {
+    min-height: 40vh;
+}
+
+.min-vh-50 {
+    min-height: 50vh;
+}
+
+.min-vh-60 {
+    min-height: 60vh;
+}
+
+.min-vh-70 {
+    min-height: 70vh;
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+.min-vh-80 {
+    min-height: 80vh;
+}
+
+.min-vh-90 {
+    min-height: 90vh;
+}
+
+.min-vh-100 {
+    min-height: 100vh;
+}
+
 
 /* width */
 ::-webkit-scrollbar {

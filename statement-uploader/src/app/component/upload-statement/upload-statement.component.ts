@@ -6,7 +6,7 @@ import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
 import { Debit } from '../../models/debit.model';
 import { TransactionService } from '../../services/transaction.service';
 import { DebitService } from '../../services/debit.service';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
 import { Transaction } from '../../models/transaction.model';
 import * as Papa from 'papaparse';
@@ -117,29 +117,57 @@ export class UploadStatementComponent {
 
   splitTransaction(): void {
     var transactionSetIndex = this.uniqueNewFirstWords[1].indexOf(this.selectedTransactionSet);
-    this.uniqueNewFirstWords[0].splice(transactionSetIndex,1);
-    this.uniqueNewFirstWords[1].splice(transactionSetIndex,1);
-
-    this.uniqueNewFirstWords[0] = this.uniqueNewFirstWords[0].concat(this.transactionSet);
-    this.uniqueNewFirstWords[1] = this.uniqueNewFirstWords[1].concat(this.transactionSet);
+    this.uniqueNewFirstWords[0].splice(transactionSetIndex,1, ...this.transactionSet);
+    this.uniqueNewFirstWords[1].splice(transactionSetIndex,1, ...this.transactionSet);
 
     this.transactionSet = [];
     this.selectedTransactionSet = "";
   }
 
+  onCategoryChange(event: any): void {
+    const selectElement = (event.target as HTMLSelectElement)
+
+    if(selectElement.value === "new-category"){
+      const dialogRef = this.openNewCategoryDialog();
+
+      dialogRef.afterClosed().subscribe(
+        newCategory => {//update and sort category list
+          if(newCategory != undefined){
+            this.dbCategories.push(newCategory);
+            this.dbCategories.sort((a, b) => 
+              a.localeCompare(b, undefined, { sensitivity: 'base' })
+          );
+          
+          setTimeout(() => {
+            selectElement.value = newCategory;
+          }, 50);
+          }
+        }
+      );
+    }
+
+  }
+
   createCategoryButton():void {
-    const dialogRef = this.dialog.open(NewCategoryComponent,{
-      width: "400px",
-      height: "300px",
-    });
+    const dialogRef = this.openNewCategoryDialog();
 
     dialogRef.afterClosed().subscribe(
       newCategory => {
-        if(newCategory != undefined){
+        if(newCategory != undefined && newCategory != ""){
           this.dbCategories.push(newCategory);
-          this.dbCategories.sort();
+          this.dbCategories.sort((a, b) => 
+            a.localeCompare(b, undefined, { sensitivity: 'base' })
+        );
         }
       });
+  }
+
+  openNewCategoryDialog(): MatDialogRef<NewCategoryComponent, any> {
+    return this.dialog.open(NewCategoryComponent,{
+      width: "400px",
+      height: "300px",
+      autoFocus: false,
+    });
   }
 
   newAccountButton(): void {
@@ -275,6 +303,13 @@ export class UploadStatementComponent {
     reader.onerror = (error) => {
       console.error('Error reading file:', error);
     };
+
+    setTimeout(() => {
+      const tableElement = document.getElementById("statement-table");
+      if(tableElement){
+        tableElement.scrollIntoView({block: 'center', behavior:'smooth'});
+      }
+    }, 100);
   }
 
   makeNewEntries(): void{

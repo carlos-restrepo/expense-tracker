@@ -72,9 +72,13 @@ export class AnalyticsComponent {
 
         setTimeout(() => {
           const categoryCheckbox = document.getElementById("Internal" + 'Blacklist') as HTMLInputElement;
-          categoryCheckbox.checked = true;
+          if(categoryCheckbox){
+            categoryCheckbox.checked = true;
+          }
           const cat2 = document.getElementById("Transfers" + 'Blacklist') as HTMLInputElement;
-          cat2.checked = true;
+          if(cat2){
+            cat2.checked = true; 
+          }
       }, 300);
         this.dbCategories.sort();
       }
@@ -352,6 +356,7 @@ export class AnalyticsComponent {
       dataPt.y = +dataPt.y.toFixed(0);
     }
 
+    monthDataPoints = monthDataPoints.filter(v => v.y > 0);
     monthDataPoints.sort((a,b) => a.y - b.y); //sort and cut off top 5
     monthDataPoints = monthDataPoints.slice(-5);
     

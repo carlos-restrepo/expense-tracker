@@ -8,6 +8,9 @@
     overflow-y: scroll;
 }
 
+.on-top{
+    z-index: 1000;
+}
 
 
 .btn-light-yellow{
