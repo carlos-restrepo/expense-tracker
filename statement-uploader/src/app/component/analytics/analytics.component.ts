@@ -10,6 +10,7 @@ import { NewCategoryComponent } from '../../dialog/new-category/new-category.com
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
 import { _countGroupLabelsBeforeOption } from '@angular/material/core';
+import { filter } from 'rxjs';
 declare const CanvasJS: any;
 
 @Component({
@@ -31,6 +32,8 @@ export class AnalyticsComponent {
 
   dbCategories: string[] = [];
   blacklistCategories: string[] = [];
+  blacklistDefault: string[] = ["Internal", "Transfers","Mortgage"]
+  filterCategories: string[] = [];
   
   dbAccounts: string[] = [];
   selectedAccounts: string[] = [];
@@ -62,41 +65,27 @@ export class AnalyticsComponent {
     private dialog: MatDialog,
   ) { }
 
+
+  //init
+
+
+  //
+
+
+
+
+
+
+
+
+
   ngOnInit(){
+    this.initCategories();
+    this.initAccounts();
+    this.initTransactions();
+  }
 
-    this.transactionService.getCategories().subscribe(
-      (categories) => {
-        this.dbCategories = this.dbCategories.concat(categories);
-        this.blacklistCategories = this.blacklistCategories.concat(categories);
-        this.blacklistCategories.splice(
-          this.blacklistCategories.indexOf("Internal"),1
-        );
-        this.blacklistCategories.splice(
-          this.blacklistCategories.indexOf("Transfers"),1
-        );
-
-        setTimeout(() => {
-          const categoryCheckbox = document.getElementById("Internal" + 'Blacklist') as HTMLInputElement;
-          if(categoryCheckbox){
-            categoryCheckbox.checked = true;
-          }
-          const cat2 = document.getElementById("Transfers" + 'Blacklist') as HTMLInputElement;
-          if(cat2){
-            cat2.checked = true; 
-          }
-      }, 300);
-        this.dbCategories.sort();
-      }
-    );
-
-    this.transactionService.getAccounts().subscribe(
-      (accounts) => {
-        this.dbAccounts = accounts;
-        this.selectedAccounts = this.selectedAccounts.concat(accounts);
-        this.dbAccounts.sort();
-      }
-    )
-    
+  initTransactions(): void {
     this.transactionService.getAllTransactions().subscribe(
       (trans: Transaction[]) => {
         this.dbTransactions = trans;
@@ -106,7 +95,40 @@ export class AnalyticsComponent {
         this.updateOvertimeChart();
       }
     );
+  }
 
+  initAccounts(): void {
+    this.transactionService.getAccounts().subscribe(
+      (accounts) => {
+        this.dbAccounts = accounts;
+        this.selectedAccounts = this.selectedAccounts.concat(accounts);
+        this.dbAccounts.sort();
+      }
+    )
+  }
+
+  initCategories(): void {
+    this.transactionService.getCategories().subscribe(
+      (categories) => {
+        this.dbCategories = this.dbCategories.concat(categories);
+        this.blacklistCategories = this.blacklistCategories.concat(categories);
+
+        for(let category of this.blacklistDefault){
+          this.blacklistCategories.splice(
+            this.blacklistCategories.indexOf(category),1
+          );
+          setTimeout(() => {
+            const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
+            if(categoryCheckbox){
+              categoryCheckbox.checked = true;
+            }
+        }, 300);
+        }
+        
+        this.filterCategories = this.filterCategories.concat(categories);
+        this.dbCategories.sort();
+      }
+    );
   }
 
   getUniqueYyyymm(): void {
@@ -138,8 +160,6 @@ export class AnalyticsComponent {
     var monthlyTotals = [];
     var zeroLine = [];
 
-    console.log(this.monthTotals)
-
     for(let month of this.selectedYyyymm){
       var monthTotal = this.monthTotals.at(
         this.selectedYyyymm.indexOf(month)
@@ -165,8 +185,6 @@ export class AnalyticsComponent {
       })
     }
 
-    console.log(monthlyTotals)
-
     this.overtimeChart.options.data.push({
       type: "line",
       indexLabel: "{y}",
@@ -183,6 +201,35 @@ export class AnalyticsComponent {
   }
 
   //Button Functions
+
+  toggleCategoryFilter(category: string){
+
+    var checksCount = 0;
+
+    for(let cat of this.filterCategories){
+      const categoryCheckbox = document.getElementById(cat + 'Filter') as HTMLInputElement;
+      if(categoryCheckbox.checked){checksCount++;}
+    }
+
+    const categoryCheckbox = document.getElementById(category + 'Filter') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+    }, 300);
+
+    if(checksCount === 0){
+      this.filterCategories = [category];
+    }
+    else{
+      if(categoryCheckbox.checked){ this.filterCategories.push(category) }
+      else{ this.filterCategories = this.filterCategories.concat(this.dbCategories) }
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+    this.updateOvertimeChart();
+  }
 
   toggleCategoryBlacklist(category: string){
     const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
@@ -235,6 +282,7 @@ export class AnalyticsComponent {
   updateFilteredDbTransactions(): void {
     this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
       return this.blacklistCategories.includes(val.category)
+          && this.filterCategories.includes(val.category)
           && this.selectedAccounts.includes(val.account)
           && this.selectedYyyymm.includes(val.yyyymm);
     });
