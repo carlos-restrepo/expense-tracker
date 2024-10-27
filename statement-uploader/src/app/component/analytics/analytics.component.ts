@@ -31,9 +31,14 @@ export class AnalyticsComponent {
   filteredDbTransactions: Transaction[] = [];
 
   dbCategories: string[] = [];
+  blacklistDefault: string[] = ["Internal", "Transfers"];
   blacklistCategories: string[] = [];
-  blacklistDefault: string[] = ["Internal", "Transfers","Mortgage"]
   filterCategories: string[] = [];
+
+  blacklistMonthDefault: string[] = ["Internal", "Transfers","Mortgage"];
+  blacklistMonthCategories: string[] = [];
+  filterMonthCategories: string[] = [];
+
   
   dbAccounts: string[] = [];
   selectedAccounts: string[] = [];
@@ -112,23 +117,44 @@ export class AnalyticsComponent {
       (categories) => {
         this.dbCategories = this.dbCategories.concat(categories);
         this.blacklistCategories = this.blacklistCategories.concat(categories);
+        this.blacklistMonthCategories = this.blacklistMonthCategories.concat(categories);
 
-        for(let category of this.blacklistDefault){
-          this.blacklistCategories.splice(
-            this.blacklistCategories.indexOf(category),1
-          );
-          setTimeout(() => {
-            const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
-            if(categoryCheckbox){
-              categoryCheckbox.checked = true;
-            }
-        }, 300);
-        }
+        this.initBlacklistDefault();
+        this.initBlacklistMonthDefault();
         
         this.filterCategories = this.filterCategories.concat(categories);
+        this.filterMonthCategories = this.filterMonthCategories.concat(categories);
         this.dbCategories.sort();
       }
     );
+  }
+
+  initBlacklistDefault(): void {
+    for(let category of this.blacklistDefault){
+      this.blacklistCategories.splice(
+        this.blacklistCategories.indexOf(category),1
+      );
+      setTimeout(() => {
+        const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
+        if(categoryCheckbox){
+          categoryCheckbox.checked = true;
+        }
+    }, 300);
+    }
+  }
+
+  initBlacklistMonthDefault(): void {
+    for(let category of this.blacklistMonthDefault){
+      this.blacklistMonthCategories.splice(
+        this.blacklistMonthCategories.indexOf(category),1
+      );
+      setTimeout(() => {
+        const categoryCheckbox = document.getElementById(category + 'MonthBlacklist') as HTMLInputElement;
+        if(categoryCheckbox){
+          categoryCheckbox.checked = true;
+        }
+    }, 300);
+    }
   }
 
   getUniqueYyyymm(): void {
@@ -354,6 +380,38 @@ export class AnalyticsComponent {
 
   //Monthly Analytics
 
+  toggleMonthCategoryFilter(category: string): void {
+
+  }
+
+  toggleMonthBlacklistFilter(category: string): void {
+
+    var checksCount = 0;
+
+    for(let cat of this.filterMonthCategories){
+      const categoryCheckbox = document.getElementById(cat + 'MonthFilter') as HTMLInputElement;
+      if(categoryCheckbox.checked){checksCount++;}
+    }
+
+    const categoryCheckbox = document.getElementById(category + 'MonthFilter') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+    }, 300);
+
+    if(checksCount === 0){
+      this.filterMonthCategories = [category];
+    }
+    else{
+      if(categoryCheckbox.checked){ this.filterMonthCategories.push(category) }
+      else{ this.filterMonthCategories = this.filterMonthCategories.concat(this.dbCategories) }
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+  }
+
   updateMonth(){
     this.updateSelectedDb();
     this.changeMonthCategoryChart();
@@ -447,11 +505,9 @@ export class AnalyticsComponent {
       });
     }
 
-    this.monthTable.sort((a,b) => a.amount - b.amount);
-  }
+    this.monthTable.filter( val => {})
 
-  filterMonthTableCategories(category: string): void {
-    this.monthTable.filter(transaction => transaction.category === category);
+    this.monthTable.sort((a,b) => a.amount - b.amount);
   }
 
   // changeMonthTable Helpers

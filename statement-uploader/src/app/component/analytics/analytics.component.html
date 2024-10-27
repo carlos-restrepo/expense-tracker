@@ -161,9 +161,9 @@
                           <!-- Dropdown menu -->
                           <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li *ngFor="let category of dbCategories">
-                              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleCategoryFilter(category)">
-                                  <input type="checkbox" id="{{category}}Filter" value="{{category}}Filter">
-                                  <label class="ps-2" for="{{category}}Filter" style="user-select: none;">{{ category }}</label>
+                              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleMonthCategoryFilter(category)">
+                                  <input type="checkbox" id="{{category}}MonthFilter" value="{{category}}MonthFilter">
+                                  <label class="ps-2" for="{{category}}MonthFilter" style="user-select: none;">{{ category }}</label>
                               </div>
                             </li>
                           </ul>
@@ -175,9 +175,9 @@
                           <!-- Dropdown menu -->
                           <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <li *ngFor="let category of dbCategories">
-                              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleCategoryFilter(category)">
-                                  <input type="checkbox" id="{{category}}Filter" value="{{category}}Filter">
-                                  <label class="ps-2" for="{{category}}Filter" style="user-select: none;">{{ category }}</label>
+                              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleMonthBlacklistFilter(category)">
+                                  <input type="checkbox" id="{{category}}MonthBlacklist" value="{{category}}MonthBlacklist">
+                                  <label class="ps-2" for="{{category}}MonthBlacklist" style="user-select: none;">{{ category }}</label>
                               </div>
                             </li>
                           </ul>
