@@ -9,6 +9,7 @@ import { MonYearPipe } from '../../pipes/mon-year.pipe';
 import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
+import { _countGroupLabelsBeforeOption } from '@angular/material/core';
 declare const CanvasJS: any;
 
 @Component({
@@ -35,6 +36,9 @@ export class AnalyticsComponent {
   selectedAccounts: string[] = [];
   
   uniqueYyyymm: string[] = [];
+  selectedYyyymm: string[] = [];
+
+  monthTotals: number[] = [];
 
   displayAnalytics: boolean = false;
   selectedMonth: string = "";
@@ -43,10 +47,11 @@ export class AnalyticsComponent {
   overtimeChart: any;
 
   selectedMonthDb: Transaction[] = [];
-  monthTotal: number = 0;
+  selectedMonthTotal: number = 0;
   previousMonthTotal: number = 0;
   monthTable: any[] = [];
-
+  momKpi: number = 0;
+  averageMonthlyTotal: number = 0;
 
 
   // Initializers
@@ -109,10 +114,10 @@ export class AnalyticsComponent {
       return arr.indexOf(val) === i;
     });
 
-    this.uniqueYyyymm.sort();
-    this.uniqueYyyymm.reverse();
+    this.uniqueYyyymm.sort()
+    this.selectedYyyymm = this.uniqueYyyymm.slice(-12);
 
-    this.selectedMonth = this.uniqueYyyymm[0];
+    this.selectedMonth = this.selectedYyyymm[this.selectedYyyymm.length - 1];
   }
 
   updateOvertimeChart(): void {
@@ -127,23 +132,18 @@ export class AnalyticsComponent {
         prefix: "$"
       },
       animationEnabled: true,
-      data: [{
-        type: "line",
-        indexLabel: "{y}",
-        dataPoints: [],
-      }]
+      data: []
     });
 
     var monthlyTotals = [];
+    var zeroLine = [];
 
-    for(let month of this.uniqueYyyymm.sort()){
-      var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
-        return val.yyyymm === month;
-      }).map(e => e.amount)
+    console.log(this.monthTotals)
 
-      var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
-        return acc + curr;
-      }, 0).toFixed(0);
+    for(let month of this.selectedYyyymm){
+      var monthTotal = this.monthTotals.at(
+        this.selectedYyyymm.indexOf(month)
+      );
 
       monthlyTotals.push({
         label: this.monYearPipe.transform(month), 
@@ -156,21 +156,33 @@ export class AnalyticsComponent {
         indexLabelFontSize: 15,
         indexLabelFontColor: "#000000",
         indexLabelBackgroundColor: "#f9e3a7"
+      });
+
+      zeroLine.push({
+        label: this.monYearPipe.transform(month),
+        y: 0,
+        markerSize: 0,
       })
     }
 
-    this.overtimeChart.options.data[0].dataPoints = monthlyTotals;
+    console.log(monthlyTotals)
+
+    this.overtimeChart.options.data.push({
+      type: "line",
+      indexLabel: "{y}",
+      dataPoints: monthlyTotals,
+    }) ;
+
+    this.overtimeChart.options.data.push({
+      type: "line",
+      color: '#9c7500',
+      dataPoints: zeroLine,
+    }) ;
+
     this.overtimeChart.render();
   }
 
   //Button Functions
-
-  log(){
-    console.log('categories')
-    console.log(this.dbCategories);
-    console.log('select categories')
-    console.log(this.blacklistCategories);
-  }
 
   toggleCategoryBlacklist(category: string){
     const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
@@ -223,8 +235,26 @@ export class AnalyticsComponent {
   updateFilteredDbTransactions(): void {
     this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
       return this.blacklistCategories.includes(val.category)
-          && this.selectedAccounts.includes(val.account);
+          && this.selectedAccounts.includes(val.account)
+          && this.selectedYyyymm.includes(val.yyyymm);
     });
+    this.getMonthTotals();
+  }
+
+  getMonthTotals(): void {
+    this.monthTotals = [];
+
+    for(let month of this.selectedYyyymm){
+      var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
+        return val.yyyymm === month;
+      }).map(e => e.amount)
+
+      var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
+        return acc + curr;
+      }, 0).toFixed(0);
+
+      this.monthTotals.push(monthTotal);
+    }
   }
 
   createCategoryButton(transaction: Transaction):void {
@@ -263,13 +293,9 @@ export class AnalyticsComponent {
     var transactionNameList = this.dbTransactions.filter(val => val.name === name);
 
     for(let transaction of transactionNameList){
-      console.log(transaction.name);
-      console.log(transaction.date);
-
       transaction.category = newCategory;
 
       if(transaction){
-        console.log(transaction.category);
         this.transactionService.updateTransactionNameCategory(transaction).subscribe();
       }
     }
@@ -291,27 +317,22 @@ export class AnalyticsComponent {
       return val.yyyymm == this.selectedMonth
     });
 
-    this.monthTotal = this.selectedMonthDb.map( v => v.amount).reduce(
-      (total, current) => {
-        return total += current * -1;
-      }, 0
-    );
 
-    var previousMonth = this.uniqueYyyymm.at(
-      this.uniqueYyyymm.indexOf(this.selectedMonth) - 1
-    );
+    var index = this.selectedYyyymm.indexOf(this.selectedMonth)
+    var val = this.monthTotals.at(index)
+    if(val != undefined){
+      this.selectedMonthTotal = val;
+    }
     
-    var previousMonthDb = this.filteredDbTransactions.filter( (val, i, obj) => {
-      return val.yyyymm == previousMonth 
-      && this.blacklistCategories.includes(val.category)
-      && this.selectedAccounts.includes(val.account);
-    });
-
-    this.previousMonthTotal = previousMonthDb.map( v => v.amount).reduce(
-      (total, current) => {
-        return total += current * -1;
-      }, 0
-    );
+    var PrevVal = this.monthTotals.at(index - 1)
+    if(PrevVal != undefined){
+      this.previousMonthTotal = PrevVal;
+    }
+    
+    this.momKpi = (this.selectedMonthTotal - this.previousMonthTotal) / this.previousMonthTotal;
+    this.averageMonthlyTotal = this.monthTotals.reduce( (acc, curr) => {
+      return curr + acc;
+    }, 0) / this.selectedYyyymm.length;
   }
 
   changeMonthCategoryChart(): void{
@@ -379,7 +400,6 @@ export class AnalyticsComponent {
     }
 
     this.monthTable.sort((a,b) => a.amount - b.amount);
-    this.monthTable.reverse();
   }
 
   filterMonthTableCategories(category: string): void {
@@ -410,7 +430,7 @@ export class AnalyticsComponent {
 
     for(let entry of this.selectedMonthDb){
       if(entry.name.indexOf(name) >= 0){
-        total += entry.amount * -1;
+        total += entry.amount;
       }
     }
     return +total.toFixed(2);

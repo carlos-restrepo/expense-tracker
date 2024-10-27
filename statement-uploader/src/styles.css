@@ -13,8 +13,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .container {
     max-width: 100%; /* Ensure container doesn't exceed viewport width */
-  }
-
+}
 
 .form-select option[value="placeholder"] {
     display:none

@@ -18,12 +18,26 @@
         </ul>
     </div>
     </div>
-    <div class="col-6">
+    <div class="col-4">
       
     </div>
-    <div class="col-2">
+    <div class="col-4 d-flex">
+      <div class="d-flex dropdown ms-auto me-1">
+        <button class="btn btn-dark ms-auto" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            Filter Categories
+            <i class="bi bi-filter-square-fill"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <li *ngFor="let category of dbCategories">
+              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleCategoryBlacklist(category)">
+                  <input type="checkbox" id="{{category}}Blacklist" value="{{category}}Blacklist">
+                  <label class="ps-2" for="{{category}}Blacklist" style="user-select: none;">{{ category }}</label>
+              </div>
+            </li>
+        </ul>
+      </div>
       <div class="d-flex dropdown">
-        <button class="btn btn-dark dropdown-toggle ms-auto" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn btn-dark ms-auto" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
             Blacklist Categories
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -34,18 +48,18 @@
               </div>
             </li>
         </ul>
-    </div>
+      </div>
     </div>
   </div>
   
-  <div class="row">
-    <div class="col-2">
-    </div>
-    <div class="col-12" style="height: 400px;">
-      <div class="border bg-light rounded shadow py-2 position-relative">
-        <div class="bg-dark rounded-pill py-2 px-3 position-absolute end-0 me-3 on-top" >
+  <div class="row pb-3">
+    <div class="col-12">
+      <div class="border bg-light rounded shadow py-2">
+        <div class="bg-dark rounded-pill py-2 px-3 ms-auto me-4" style="width: 10%;">
           <select class="form-select bg-light-yellow" id="">
             <option value="">1 Year</option>
+            <option value="">6 months</option>
+            <option value="">Quarter</option>
           </select>
         </div>
         <div class="mx-auto" id="overtimeChart" style="width: 98%; height: 350px;"></div>
@@ -66,7 +80,7 @@
                   (change)="updateMonth()"
                   [(ngModel)]="selectedMonth"
                   id="yyyymmSelect">
-            <option *ngFor="let yyyymm of uniqueYyyymm.reverse()" value="{{yyyymm}}">{{yyyymm | monYear}}</option>
+            <option *ngFor="let yyyymm of selectedYyyymm.reverse()" value="{{yyyymm}}">{{yyyymm | monYear}}</option>
           </select>
         </div>
       </div>
@@ -88,10 +102,13 @@
           Month Total
         </h6>
         <h4 class="text-center">
-          {{ monthTotal | currency }}
+          {{ selectedMonthTotal | currency }}
         </h4>
         <h6 class="text-center">
-          +20%, {{ previousMonthTotal | currency }}
+          <span [ngClass]="momKpi > 0? 'text-success' : 'text-danger'">
+            {{ momKpi | percent}},
+          </span>
+           {{ previousMonthTotal | currency }}
         </h6>
       </div>
     </div>
@@ -101,12 +118,12 @@
       <div class="d-flex flex-column border bg-light rounded shadow py-3 w-100 h-100 align-items-center justify-content-center">
         <div>
           <h6 class="text-center">
-            Previous Month Total
+            Average Month Total
           </h6>
         </div>
         <div>
           <h4 class="text-center">
-            {{ previousMonthTotal | currency }}
+            {{ averageMonthlyTotal | currency }}
           </h4>
         </div>
       </div>
