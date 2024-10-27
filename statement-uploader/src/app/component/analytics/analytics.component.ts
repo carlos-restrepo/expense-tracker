@@ -70,20 +70,6 @@ export class AnalyticsComponent {
     private dialog: MatDialog,
   ) { }
 
-
-  //init
-
-
-  //
-
-
-
-
-
-
-
-
-
   ngOnInit(){
     this.initCategories();
     this.initAccounts();
@@ -94,7 +80,7 @@ export class AnalyticsComponent {
     this.transactionService.getAllTransactions().subscribe(
       (trans: Transaction[]) => {
         this.dbTransactions = trans;
-        this.getUniqueYyyymm();
+        this.initUniqueYyyymm();
         this.updateFilteredDbTransactions();
         this.updateMonth();
         this.updateOvertimeChart();
@@ -157,7 +143,7 @@ export class AnalyticsComponent {
     }
   }
 
-  getUniqueYyyymm(): void {
+  initUniqueYyyymm(): void {
     this.uniqueYyyymm = this.dbTransactions.map(v => v.yyyymm).filter((val, i, arr) => {
       return arr.indexOf(val) === i;
     });
@@ -167,6 +153,51 @@ export class AnalyticsComponent {
 
     this.selectedMonth = this.selectedYyyymm[this.selectedYyyymm.length - 1];
   }
+
+  // Data Filters
+  
+  updateFilteredDbTransactions(): void {
+    this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
+      return this.blacklistCategories.includes(val.category)
+          && this.filterCategories.includes(val.category)
+          && this.selectedAccounts.includes(val.account)
+          && this.selectedYyyymm.includes(val.yyyymm);
+    });
+    this.getMonthTotals();
+  }
+
+  getMonthTotals(): void {
+    this.monthTotals = [];
+
+    for(let month of this.selectedYyyymm){
+      var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
+        return val.yyyymm === month;
+      }).map(e => e.amount)
+
+      var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
+        return acc + curr;
+      }, 0).toFixed(0);
+
+      this.monthTotals.push(monthTotal);
+    }
+  }
+
+  updateMonth(){
+    this.updateSelectedMonthDb();
+    this.changeMonthCategoryChart();
+    this.changeMonthTable();
+  }
+
+  updateSelectedMonthDb(): void {
+    this.selectedMonthDb  = this.filteredDbTransactions.filter( (val, i, obj) => {
+      return val.yyyymm == this.selectedMonth
+      && this.blacklistMonthCategories.includes(val.category);
+    });
+
+    this.updateMonthCards();
+  }
+
+  // Visuals
 
   updateOvertimeChart(): void {
     this.overtimeChart = new CanvasJS.Chart("overtimeChart", {
@@ -226,221 +257,6 @@ export class AnalyticsComponent {
     this.overtimeChart.render();
   }
 
-  //Button Functions
-
-  toggleCategoryFilter(category: string){
-
-    var checksCount = 0;
-
-    for(let cat of this.filterCategories){
-      const categoryCheckbox = document.getElementById(cat + 'Filter') as HTMLInputElement;
-      if(categoryCheckbox.checked){checksCount++;}
-    }
-
-    const categoryCheckbox = document.getElementById(category + 'Filter') as HTMLInputElement;
-    categoryCheckbox.disabled = true;
-    categoryCheckbox.checked = !categoryCheckbox.checked;
-    setTimeout(() => {
-      categoryCheckbox.disabled = false;
-    }, 300);
-
-    if(checksCount === 0){
-      this.filterCategories = [category];
-    }
-    else{
-      if(categoryCheckbox.checked){ this.filterCategories.push(category) }
-      else{ this.filterCategories = this.filterCategories.concat(this.dbCategories) }
-    }
-
-    this.updateFilteredDbTransactions();
-    this.updateMonth();
-    this.updateOvertimeChart();
-  }
-
-  toggleCategoryBlacklist(category: string){
-    const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
-    categoryCheckbox.disabled = true;
-    categoryCheckbox.checked = !categoryCheckbox.checked;
-
-    setTimeout(() => {
-      categoryCheckbox.disabled = false;
-  }, 300);
-
-    if(categoryCheckbox.checked) { //If category just blacklisted, remove from blacklistCategories
-      const categoryIndex = this.blacklistCategories.indexOf(category);
-      if(categoryIndex > -1){
-        this.blacklistCategories.splice(categoryIndex, 1);
-      }
-    } 
-    else{
-      this.blacklistCategories.push(category);
-    }
-
-    this.updateFilteredDbTransactions();
-    this.updateMonth();
-    this.updateOvertimeChart();
-  }
-
-  toggleAccounts(account: string): void {
-    const accountCheckbox = document.getElementById(account) as HTMLInputElement;
-    accountCheckbox.disabled = true;
-    accountCheckbox.checked = !accountCheckbox.checked;
-
-    setTimeout(() => {
-      accountCheckbox.disabled = false;
-    }, 300);
-
-    if(!accountCheckbox.checked) {
-      const accountIndex = this.selectedAccounts.indexOf(account);
-      if(accountIndex > -1){
-        this.selectedAccounts.splice(accountIndex, 1);
-      }
-    } 
-    else{
-      this.selectedAccounts.push(account);
-    }
-
-    this.updateFilteredDbTransactions();
-    this.updateMonth();
-    this.updateOvertimeChart();
-  }
-
-  updateFilteredDbTransactions(): void {
-    this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
-      return this.blacklistCategories.includes(val.category)
-          && this.filterCategories.includes(val.category)
-          && this.selectedAccounts.includes(val.account)
-          && this.selectedYyyymm.includes(val.yyyymm);
-    });
-    this.getMonthTotals();
-  }
-
-  getMonthTotals(): void {
-    this.monthTotals = [];
-
-    for(let month of this.selectedYyyymm){
-      var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
-        return val.yyyymm === month;
-      }).map(e => e.amount)
-
-      var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
-        return acc + curr;
-      }, 0).toFixed(0);
-
-      this.monthTotals.push(monthTotal);
-    }
-  }
-
-  createCategoryButton(transaction: Transaction):void {
-    const dialogRef = this.dialog.open(NewCategoryComponent,{
-      width: "400px",
-      height: "300px",
-    });
-
-    dialogRef.afterClosed().subscribe(
-      newCategory => {
-        if(newCategory != undefined){
-          // this.dbCategories.push(newCategory);
-          // this.dbCategories.sort();
-          const confirmDialogRef = this.dialog.open(UpdateCategoryConfirmComponent,{
-            data: {
-              name: transaction.name,
-              category: transaction.category,
-              newCategory: newCategory
-            }
-          });
-
-          confirmDialogRef.afterClosed().subscribe(result => {
-            if(result){
-              this.changeTransactionCategory(transaction.name, newCategory);
-            }
-          })
-        }
-        else{
-          alert("Canceled by invalid category");
-        }
-      });
-  }
-
-  changeTransactionCategory(name: string, newCategory: string): void {
-
-    var transactionNameList = this.dbTransactions.filter(val => val.name === name);
-
-    for(let transaction of transactionNameList){
-      transaction.category = newCategory;
-
-      if(transaction){
-        this.transactionService.updateTransactionNameCategory(transaction).subscribe();
-      }
-    }
-
-    this.updateFilteredDbTransactions();
-
-  }
-
-  //Monthly Analytics
-
-  toggleMonthCategoryFilter(category: string): void {
-
-  }
-
-  toggleMonthBlacklistFilter(category: string): void {
-
-    var checksCount = 0;
-
-    for(let cat of this.filterMonthCategories){
-      const categoryCheckbox = document.getElementById(cat + 'MonthFilter') as HTMLInputElement;
-      if(categoryCheckbox.checked){checksCount++;}
-    }
-
-    const categoryCheckbox = document.getElementById(category + 'MonthFilter') as HTMLInputElement;
-    categoryCheckbox.disabled = true;
-    categoryCheckbox.checked = !categoryCheckbox.checked;
-    setTimeout(() => {
-      categoryCheckbox.disabled = false;
-    }, 300);
-
-    if(checksCount === 0){
-      this.filterMonthCategories = [category];
-    }
-    else{
-      if(categoryCheckbox.checked){ this.filterMonthCategories.push(category) }
-      else{ this.filterMonthCategories = this.filterMonthCategories.concat(this.dbCategories) }
-    }
-
-    this.updateFilteredDbTransactions();
-    this.updateMonth();
-  }
-
-  updateMonth(){
-    this.updateSelectedDb();
-    this.changeMonthCategoryChart();
-    this.changeMonthTable();
-  }
-
-  updateSelectedDb(): void {
-    this.selectedMonthDb  = this.filteredDbTransactions.filter( (val, i, obj) => {
-      return val.yyyymm == this.selectedMonth
-    });
-
-
-    var index = this.selectedYyyymm.indexOf(this.selectedMonth)
-    var val = this.monthTotals.at(index)
-    if(val != undefined){
-      this.selectedMonthTotal = val;
-    }
-    
-    var PrevVal = this.monthTotals.at(index - 1)
-    if(PrevVal != undefined){
-      this.previousMonthTotal = PrevVal;
-    }
-    
-    this.momKpi = (this.selectedMonthTotal - this.previousMonthTotal) / this.previousMonthTotal;
-    this.averageMonthlyTotal = this.monthTotals.reduce( (acc, curr) => {
-      return curr + acc;
-    }, 0) / this.selectedYyyymm.length;
-  }
-
   changeMonthCategoryChart(): void{
     this.monthChart = new CanvasJS.Chart("monthChart", {
       theme: "light2",
@@ -492,7 +308,6 @@ export class AnalyticsComponent {
   }
 
   changeMonthTable():void {
-
     var monthUniqueNames = this.findUniqueNames();
 
     this.monthTable = [];
@@ -505,12 +320,32 @@ export class AnalyticsComponent {
       });
     }
 
-    this.monthTable.filter( val => {})
 
     this.monthTable.sort((a,b) => a.amount - b.amount);
+    this.monthTable = this.monthTable.filter( val => {
+      return this.filterMonthCategories.includes(val.category);
+    });
   }
 
-  // changeMonthTable Helpers
+  updateMonthCards(): void {
+    var index = this.selectedYyyymm.indexOf(this.selectedMonth)
+    var val = this.monthTotals.at(index)
+    if(val != undefined){
+      this.selectedMonthTotal = val;
+    }
+    
+    var PrevVal = this.monthTotals.at(index - 1)
+    if(PrevVal != undefined){
+      this.previousMonthTotal = PrevVal;
+    }
+    
+    this.momKpi = (this.selectedMonthTotal - this.previousMonthTotal) / this.previousMonthTotal;
+    this.averageMonthlyTotal = this.monthTotals.reduce( (acc, curr) => {
+      return curr + acc;
+    }, 0) / this.selectedYyyymm.length;
+  }
+
+  // Visuals - changeMonthTable Helpers
 
   findUniqueNames(): string[]{
     var uniqueNames: string[] = [];
@@ -546,5 +381,188 @@ export class AnalyticsComponent {
     )?.category;
   }
 
+  //Button Functions
 
+  toggleAccounts(account: string): void {
+    const accountCheckbox = document.getElementById(account) as HTMLInputElement;
+    accountCheckbox.disabled = true;
+    accountCheckbox.checked = !accountCheckbox.checked;
+
+    setTimeout(() => {
+      accountCheckbox.disabled = false;
+    }, 300);
+
+    if(!accountCheckbox.checked) {
+      const accountIndex = this.selectedAccounts.indexOf(account);
+      if(accountIndex > -1){
+        this.selectedAccounts.splice(accountIndex, 1);
+      }
+    } 
+    else{
+      this.selectedAccounts.push(account);
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+    this.updateOvertimeChart();
+  }
+
+  toggleCategoryFilter(category: string){
+
+    var checksCount = 0;
+
+    for(let cat of this.filterCategories){
+      const categoryCheckbox = document.getElementById(cat + 'Filter') as HTMLInputElement;
+      if(categoryCheckbox.checked){checksCount++;}
+    }
+
+    const categoryCheckbox = document.getElementById(category + 'Filter') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+    }, 300);
+
+    if(checksCount === 0){
+      this.filterCategories = [category];
+    }
+    else{
+      if(categoryCheckbox.checked){ this.filterCategories.push(category) }
+      else{
+        if(checksCount === 1){
+          this.filterCategories = this.filterCategories.concat(this.dbCategories) 
+        }
+        else{
+          this.filterCategories.splice(
+            this.filterCategories.indexOf(category)
+          )
+        }
+      }
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+    this.updateOvertimeChart();
+  }
+
+  toggleCategoryBlacklist(category: string){
+    const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+  }, 300);
+
+    if(categoryCheckbox.checked) { //If category just blacklisted, remove from blacklistCategories
+      const categoryIndex = this.blacklistCategories.indexOf(category);
+      if(categoryIndex > -1){
+        this.blacklistCategories.splice(categoryIndex, 1);
+      }
+    } 
+    else{
+      this.blacklistCategories.push(category);
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+    this.updateOvertimeChart();
+  }
+
+  createCategoryButton(transaction: Transaction):void {
+    const dialogRef = this.dialog.open(NewCategoryComponent,{
+      width: "400px",
+      height: "300px",
+    });
+
+    dialogRef.afterClosed().subscribe(
+      newCategory => {
+        if(newCategory != undefined){
+          // this.dbCategories.push(newCategory);
+          // this.dbCategories.sort();
+          const confirmDialogRef = this.dialog.open(UpdateCategoryConfirmComponent,{
+            data: {
+              name: transaction.name,
+              category: transaction.category,
+              newCategory: newCategory
+            }
+          });
+
+          confirmDialogRef.afterClosed().subscribe(result => {
+            if(result){
+              this.changeTransactionCategory(transaction.name, newCategory);
+            }
+          })
+        }
+        else{
+          alert("Canceled by invalid category");
+        }
+      });
+  }
+
+  changeTransactionCategory(name: string, newCategory: string): void {
+
+    var transactionNameList = this.dbTransactions.filter(val => val.name === name);
+
+    for(let transaction of transactionNameList){
+      transaction.category = newCategory;
+
+      if(transaction){
+        this.transactionService.updateTransactionNameCategory(transaction).subscribe();
+      }
+    }
+
+    this.updateFilteredDbTransactions();
+
+  }
+
+  toggleMonthCategoryFilter(category: string): void {
+
+    var checksCount = 0;
+
+    for(let cat of this.filterMonthCategories){
+      const categoryCheckbox = document.getElementById(cat + 'MonthFilter') as HTMLInputElement;
+      if(categoryCheckbox.checked){checksCount++;}
+    }
+
+    const categoryCheckbox = document.getElementById(category + 'MonthFilter') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+    }, 300);
+
+    if(checksCount === 0){
+      this.filterMonthCategories = [category];
+    }
+    else{
+      if(categoryCheckbox.checked){ this.filterMonthCategories.push(category) }
+      else{ this.filterMonthCategories = this.filterMonthCategories.concat(this.dbCategories) }
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+  }
+
+  toggleMonthBlacklistFilter(category: string): void {
+    const categoryCheckbox = document.getElementById(category + 'MonthBlacklist') as HTMLInputElement;
+    categoryCheckbox.disabled = true;
+    categoryCheckbox.checked = !categoryCheckbox.checked;
+    setTimeout(() => {
+      categoryCheckbox.disabled = false;
+    }, 300);
+
+    if(categoryCheckbox.checked) {
+      const categoryIndex = this.blacklistMonthCategories.indexOf(category);
+      if(categoryIndex > -1){
+        this.blacklistMonthCategories.splice(categoryIndex, 1);
+      }
+    } 
+    else{
+      this.blacklistMonthCategories.push(category);
+    }
+
+    this.updateFilteredDbTransactions();
+    this.updateMonth();
+  }
 }
