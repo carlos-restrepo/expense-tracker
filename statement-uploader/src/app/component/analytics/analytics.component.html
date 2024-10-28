@@ -25,7 +25,7 @@
       <div class="d-flex dropdown ms-auto me-1">
         <button class="btn btn-warning ms-auto" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
             Filter Categories
-            <i class="bi bi-filter-square-fill"></i>
+            <i class="bi bi-filter-circle-fill"></i>
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             <li *ngFor="let category of dbCategories">
@@ -55,15 +55,36 @@
   
   <div class="row pb-3">
     <div class="col-12">
-      <div class="border bg-light rounded shadow py-2">
-        <div class="bg-dark rounded-pill py-2 px-3 ms-auto me-4" style="width: 10%;">
+      <div class="row mx-0 border bg-light rounded shadow py-2">
+        <div class="col-4 d-flex ms-4">
+          <div class="bg-light border shadow rounded px-2 me-2">
+            <span class="text-center">
+              Period Month Total
+            </span>
+            <h6 class="text-center" [ngClass]="periodChangeTotal > 0? 'text-success' : 'text-danger'">
+              {{ periodChangeTotal | currency }}
+            </h6>
+          </div>
+          <div class="bg-light border shadow rounded px-2">
+            <span class="text-center">
+              Period Month Average
+            </span>
+            <h6 class="text-center">
+              {{averageMonthlyTotal | currency}}
+            </h6>
+          </div>
+        </div>
+        <div class="col-4 d-flex bg-warning rounded-pill justify-content-center align-items-center">
+          <h5>Monthly Total Change over Time</h5>
+        </div>
+        <div class=" col-4 bg-dark rounded py-2 px-3 ms-auto me-4" style="width: 10%;">
           <select class="form-select bg-light-yellow" id="">
             <option value="">1 Year</option>
             <option value="">6 months</option>
             <option value="">Quarter</option>
           </select>
         </div>
-        <div class="mx-auto" id="overtimeChart" style="width: 98%; height: 350px;"></div>
+        <div class="col-12 mx-auto mt-2" id="overtimeChart" style="width: 98%; height: 350px;"></div>
       </div>
     </div>
   </div>
@@ -153,10 +174,7 @@
                       Category
                       <div class="d-flex dropdown ps-1">
                         <div class="badge bg-warning" style="cursor: pointer;">
-                          <i class="bi bi-filter-square-fill text-dark"
-                              id="dropdownIcon" 
-                              data-bs-toggle="dropdown" 
-                              aria-expanded="false"></i>
+                          <i class="bi bi-filter-circle-fill text-dark fs-6" data-bs-toggle="dropdown"></i>
     
                           <!-- Dropdown menu -->
                           <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -168,25 +186,26 @@
                             </li>
                           </ul>
                         </div>
-                        <div class="badge bg-dark" style="cursor: pointer;">
-                          <i class="bi bi-slash-circle"
-                              data-bs-toggle="dropdown"></i>
-    
-                          <!-- Dropdown menu -->
-                          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <li *ngFor="let category of dbCategories">
-                              <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleMonthBlacklistFilter(category)">
-                                  <input type="checkbox" id="{{category}}MonthBlacklist" value="{{category}}MonthBlacklist">
-                                  <label class="ps-2" for="{{category}}MonthBlacklist" style="user-select: none;">{{ category }}</label>
-                              </div>
-                            </li>
-                          </ul>
+                        <div class="badge bg-dark " style="cursor: pointer;">
+                          <div class="my-auto">
+                            <i class="bi bi-slash-circle fs-6" data-bs-toggle="dropdown"></i>
+      
+                            <!-- Dropdown menu -->
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              <li *ngFor="let category of dbCategories">
+                                <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleMonthBlacklistFilter(category)">
+                                    <input type="checkbox" id="{{category}}MonthBlacklist" value="{{category}}MonthBlacklist">
+                                    <label class="ps-2" for="{{category}}MonthBlacklist" style="user-select: none;">{{ category }}</label>
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </th>
                 </tr>
-            </thead>
+              </thead>
               <tbody>
                   <tr *ngFor="let entry of monthTable">
                     <!-- Transaction Name -->

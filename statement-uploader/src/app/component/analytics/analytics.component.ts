@@ -59,6 +59,7 @@ export class AnalyticsComponent {
   previousMonthTotal: number = 0;
   monthTable: any[] = [];
   momKpi: number = 0;
+  periodChangeTotal: number = 0;
   averageMonthlyTotal: number = 0;
 
 
@@ -156,6 +157,7 @@ export class AnalyticsComponent {
 
   // Data Filters
   
+  
   updateFilteredDbTransactions(): void {
     this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
       return this.blacklistCategories.includes(val.category)
@@ -202,9 +204,6 @@ export class AnalyticsComponent {
   updateOvertimeChart(): void {
     this.overtimeChart = new CanvasJS.Chart("overtimeChart", {
       theme: "light2",
-      title: {
-        text: "Total Change over Time"
-      },
       axisY: {
         interlacedColor: "#fff9f9", 
         valueFormatString:  "#,##0.##", // move comma to change formatting
@@ -262,6 +261,9 @@ export class AnalyticsComponent {
       theme: "light2",
       title: {
       },
+      axisY: {
+        interval: 50,
+      },
       animationEnabled: true,
       data: [{
         type: "bar",
@@ -279,6 +281,8 @@ export class AnalyticsComponent {
         indexLabelFormatter: (e:any) => {
           return "\u2800$" + e.dataPoint.y + "\u2800"
         },
+        indexLabelBorderColor: "#333333",
+        indexLabelBorderThickness: 0.5,
         indexLabelFontSize: 15,
         indexLabelFontColor: "#000000",
         indexLabelBackgroundColor: "#f9e3a7"
@@ -304,6 +308,8 @@ export class AnalyticsComponent {
     monthDataPoints = monthDataPoints.slice(-5);
     
     this.monthChart.options.data[0].dataPoints = monthDataPoints;
+    // var interval = this.monthChart.axisX[0].get("interval");
+    // this.monthChart.axisX[0].set("interval", 100)
     this.monthChart.render();
   }
 
@@ -340,9 +346,10 @@ export class AnalyticsComponent {
     }
     
     this.momKpi = (this.selectedMonthTotal - this.previousMonthTotal) / this.previousMonthTotal;
-    this.averageMonthlyTotal = this.monthTotals.reduce( (acc, curr) => {
+    this.periodChangeTotal = this.monthTotals.reduce( (acc, curr) => {
       return curr + acc;
-    }, 0) / this.selectedYyyymm.length;
+    }, 0);
+    this.averageMonthlyTotal = this.periodChangeTotal / this.selectedYyyymm.length;
   }
 
   // Visuals - changeMonthTable Helpers
