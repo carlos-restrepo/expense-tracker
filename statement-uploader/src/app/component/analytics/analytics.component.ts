@@ -157,6 +157,9 @@ export class AnalyticsComponent {
 
   // Data Filters
   
+  updateAccountPeriodData(): void {
+
+  }
   
   updateFilteredDbTransactions(): void {
     this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
@@ -308,8 +311,6 @@ export class AnalyticsComponent {
     monthDataPoints = monthDataPoints.slice(-5);
     
     this.monthChart.options.data[0].dataPoints = monthDataPoints;
-    // var interval = this.monthChart.axisX[0].get("interval");
-    // this.monthChart.axisX[0].set("interval", 100)
     this.monthChart.render();
   }
 
