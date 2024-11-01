@@ -2,7 +2,7 @@ import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { DebitService } from '../../services/debit.service';
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction } from '../../models/transaction.model';
-import { HttpClientModule } from '@angular/common/http';
+import {} from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonYearPipe } from '../../pipes/mon-year.pipe';
@@ -17,7 +17,11 @@ declare const CanvasJS: any;
   selector: 'app-analytics',
   standalone: true,
   imports: [
-    HttpClientModule,
+    
+// TODO: `HttpClientModule` should not be imported into a component directly.
+// Please refactor the code to add `provideHttpClient()` call to the provider list in the
+// application bootstrap logic and remove the `HttpClientModule` import from this component.
+HttpClientModule,
     CommonModule,
     FormsModule,
     MonYearPipe,
