@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
 import { Debit } from '../../models/debit.model';
 import { TransactionService } from '../../services/transaction.service';
@@ -20,12 +20,16 @@ import { Modal } from 'bootstrap';
     HttpClientModule,
     FormsModule,
     CanvasJSAngularChartsModule,
+    FormsModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './upload-statement.component.html',
   styleUrl: './upload-statement.component.css'
 })
 export class UploadStatementComponent {
+
   
+  fileForm!: FormGroup;
 
   csvData: any[] = [];
   dbEntries: any[] = [];
@@ -62,7 +66,6 @@ export class UploadStatementComponent {
   selectedTransactionSet: string = "";
 
   file: any;
-  fileReady: boolean = false;
 
   fileProcessed: boolean = false;
 
@@ -75,7 +78,23 @@ export class UploadStatementComponent {
     private transactionService: TransactionService,
     private debitService: DebitService,
     private dialog: MatDialog,
-  ) { }
+    private formBuilder: FormBuilder,
+  ) { 
+    this.fileForm = formBuilder.group({
+      fileInput: [
+        null,
+        [
+          Validators.required
+        ]
+      ],
+      accountSelect: [
+        null,
+        [
+          Validators.required
+        ]
+      ]
+    })
+  }
 
   //Process Flow
   //User uploads file, triggering: onFileUpload -> loadEntries -> findUniqueDbNames
@@ -224,8 +243,7 @@ export class UploadStatementComponent {
     this.isTdDebitFile = false;
     this.isCibcFile = false;
     this.isRogersFile = false;
-
-    this.fileReady = false;
+    
     this.fileProcessed = false;
 
     if (this.file) {
@@ -233,16 +251,13 @@ export class UploadStatementComponent {
 
       if(fileName.indexOf("cibc") > -1){
         this.isCibcFile = true;
-        this.fileReady = true;
       }
       else if(fileName.indexOf("accountactivity") > -1){
         this.isTdDebitFile = true;
-        this.fileReady = true;
       }
       else if(fileName.indexOf("Transaction") > -1
               && fileName.indexOf("History") > -1){
         this.isRogersFile = true;
-        this.fileReady = true;
       }
       else{
         alert("File account not recognized");
@@ -307,7 +322,7 @@ export class UploadStatementComponent {
     setTimeout(() => {
       const tableElement = document.getElementById("statement-table");
       if(tableElement){
-        tableElement.scrollIntoView({block: 'center', behavior:'smooth'});
+        tableElement.scrollIntoView({block: 'start', behavior:'smooth'});
       }
     }, 100);
   }
