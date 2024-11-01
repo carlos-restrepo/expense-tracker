@@ -1,9 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {} from '@angular/common/http';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
-import { Debit } from '../../models/debit.model';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, } from '@angular/forms';
 import { TransactionService } from '../../services/transaction.service';
 import { DebitService } from '../../services/debit.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -17,13 +15,6 @@ import { Modal } from 'bootstrap';
   standalone: true,
   imports: [
     CommonModule,
-    
-// TODO: `HttpClientModule` should not be imported into a component directly.
-// Please refactor the code to add `provideHttpClient()` call to the provider list in the
-// application bootstrap logic and remove the `HttpClientModule` import from this component.
-HttpClientModule,
-    FormsModule,
-    CanvasJSAngularChartsModule,
     FormsModule,
     ReactiveFormsModule,
   ],
@@ -473,17 +464,10 @@ export class UploadStatementComponent {
   //START Submit Statement Flow
 
   showSubmissionModal(): void {
-    const subModalElement = <HTMLElement> document.getElementById("submissionModal");
-    const subModal = new Modal(subModalElement);
-    subModal.show();
-  }
-
-  submitStatement(): void {
-
-    //check if all categories are filled
-    
     if (this.fillCategories()) { //check if all categories are filled
-      this.saveEntries();
+      const subModalElement = <HTMLElement> document.getElementById("submissionModal");
+      const subModal = new Modal(subModalElement);
+      subModal.show();
     }
     else{
       alert("There are empty categories!");
@@ -494,7 +478,6 @@ export class UploadStatementComponent {
   fillCategories(): boolean{
     //returns true if all categories are filled
     for(let i=0; i < this.uniqueNewFirstWords[1].length;i++){
-      //get element and
       const dropdownElement = (<HTMLInputElement>document.getElementById("dropdown" + i));
       if(dropdownElement){
         for(let entry of this.newEntries){

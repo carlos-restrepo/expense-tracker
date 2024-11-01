@@ -1,30 +1,21 @@
-import { Component, inject, ViewEncapsulation } from '@angular/core';
-import { DebitService } from '../../services/debit.service';
+import { Component } from '@angular/core';
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction } from '../../models/transaction.model';
-import {} from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MonYearPipe } from '../../pipes/mon-year.pipe';
 import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
-import { _countGroupLabelsBeforeOption } from '@angular/material/core';
-import { filter } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 declare const CanvasJS: any;
 
 @Component({
   selector: 'app-analytics',
   standalone: true,
   imports: [
-    
-// TODO: `HttpClientModule` should not be imported into a component directly.
-// Please refactor the code to add `provideHttpClient()` call to the provider list in the
-// application bootstrap logic and remove the `HttpClientModule` import from this component.
-HttpClientModule,
     CommonModule,
     FormsModule,
-    MonYearPipe,
+    // MonYearPipe
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
@@ -71,7 +62,7 @@ export class AnalyticsComponent {
   
   constructor(
     private transactionService: TransactionService,
-    private monYearPipe: MonYearPipe,
+    // private monYearPipe: MonYearPipe,
     private dialog: MatDialog,
   ) { }
 
@@ -229,7 +220,8 @@ export class AnalyticsComponent {
       );
 
       monthlyTotals.push({
-        label: this.monYearPipe.transform(month), 
+        // label: this.monYearPipe.transform(month), 
+        label: month,
         y: monthTotal,
         indexLabelFormatter: (e:any) => {
           return e.dataPoint.y < 0? "\u2800-$" + (-1*e.dataPoint.y) + "\u2800" : "\u2800$" + e.dataPoint.y + "\u2800"
@@ -242,7 +234,8 @@ export class AnalyticsComponent {
       });
 
       zeroLine.push({
-        label: this.monYearPipe.transform(month),
+        // label: this.monYearPipe.transform(month),
+        label: month,
         y: 0,
         markerSize: 0,
       })

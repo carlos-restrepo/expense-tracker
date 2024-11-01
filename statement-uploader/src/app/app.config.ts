@@ -1,14 +1,19 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { MonYearPipe } from './pipes/mon-year.pipe';
+import { provideHttpClient } from '@angular/common/http';
+import { provideClientHydration } from '@angular/platform-browser';
+import { provideMarkdown } from 'ngx-markdown';
+import { KatexModule } from 'ng-katex';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes), 
-    MonYearPipe, 
-    provideAnimationsAsync(), provideAnimationsAsync(), provideAnimationsAsync(), provideAnimationsAsync()
-  ]
+    provideClientHydration(), 
+    provideHttpClient(),
+    provideMarkdown(),
+    KatexModule
+  ],
 };

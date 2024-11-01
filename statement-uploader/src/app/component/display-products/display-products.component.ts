@@ -8,12 +8,13 @@ import { MarkdownModule } from 'ngx-markdown';
   standalone: true,
   imports: [
     CommonModule,
+    MarkdownModule,
   ],
   templateUrl: './display-products.component.html',
   styleUrl: './display-products.component.css'
 })
 export class DisplayProductsComponent {
 
-  list: number[] = [1,1,1,1,1,1,1,1,1,1,11,1,1,1,1,1,1,1,1];
+  testLatex: string = "$x+y$"
 
 }

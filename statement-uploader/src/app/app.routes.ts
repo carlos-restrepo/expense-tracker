@@ -5,7 +5,7 @@ import { DisplayProductsComponent } from './component/display-products/display-p
 
 export const routes: Routes = [
     {path:"", redirectTo:"analytics", pathMatch:'full'},
-    {path:"analytics", component:AnalyticsComponent},
     {path:"upload-statement", component:UploadStatementComponent},
+    {path:"analytics", component:AnalyticsComponent},
     {path:"products", component:DisplayProductsComponent},
 ];
