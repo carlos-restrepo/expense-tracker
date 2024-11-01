@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { KatexModule } from 'ng-katex';
+import { MarkdownModule } from 'ngx-markdown';
 
 interface MonthlyPrices {
   AveragePrice: number;

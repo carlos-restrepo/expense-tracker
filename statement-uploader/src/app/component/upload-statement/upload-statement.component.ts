@@ -468,15 +468,18 @@ export class UploadStatementComponent {
 
   //START Submit Statement Flow
 
+  showSubmissionModal(): void {
+    const subModalElement = <HTMLElement> document.getElementById("submissionModal");
+    const subModal = new Modal(subModalElement);
+    subModal.show();
+  }
+
   submitStatement(): void {
 
     //check if all categories are filled
     
     if (this.fillCategories()) { //check if all categories are filled
       this.saveEntries();
-      const subModalElement = <HTMLElement> document.getElementById("submissionModal");
-      const subModal = new Modal(subModalElement)
-      subModal.show();
     }
     else{
       alert("There are empty categories!");
@@ -488,7 +491,7 @@ export class UploadStatementComponent {
     //returns true if all categories are filled
     for(let i=0; i < this.uniqueNewFirstWords[1].length;i++){
       //get element and
-      const dropdownElement = (<HTMLInputElement>document.getElementById("dropdown " + i));
+      const dropdownElement = (<HTMLInputElement>document.getElementById("dropdown" + i));
       if(dropdownElement){
         for(let entry of this.newEntries){
           if(entry.name.indexOf(this.uniqueNewFirstWords[1][i]) === 0){
