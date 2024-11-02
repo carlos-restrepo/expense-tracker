@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, KeyValuePipe } from '@angular/common';
 import {} from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, } from '@angular/forms';
@@ -6,7 +6,7 @@ import { TransactionService } from '../../services/transaction.service';
 import { DebitService } from '../../services/debit.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
-import { Transaction } from '../../models/transaction.model';
+import { emptyTransaction, Transaction } from '../../models/transaction.model';
 import * as Papa from 'papaparse';
 import { Modal } from 'bootstrap';
 
@@ -51,14 +51,18 @@ export class UploadStatementComponent {
 
   newEntries: Transaction[] = [];
   duplicateNewEntries: Transaction[] = [];
-  uniqueNewFirstWords: Array<Array<string>> = [[],[]]; //[[unique first word], [common substring]]
+
+  
+  //transactionSets has structure { entryFirstWord: string = intersection of all names with same first word}
+  transactionSets: any = {}; //[[unique first word], [common substring]]
+  transactionSetsKeys: string[] = [];
   uniqueDbNames: string[] = [];
 
   selectedAccount: string = "";
   newAccountName: string = "";
 
-  transactionSet: string[] = [];
-  selectedTransactionSet: string = "";
+  selectedTransactionSet: string[] = [];
+  selectedTransactionSetName: string = "";
 
   file: any;
 
@@ -69,6 +73,9 @@ export class UploadStatementComponent {
   isTdDebitFile: boolean = false;
   isRogersFile: boolean = false;
   
+
+  //init
+
   constructor(
     private transactionService: TransactionService,
     private debitService: DebitService,
@@ -91,122 +98,13 @@ export class UploadStatementComponent {
     })
   }
 
-  //Process Flow
-  //User uploads file, triggering: onFileUpload -> loadEntries -> findUniqueDbNames
-  //User clicks Process File, triggering: readCsv -> makeEntries
-  //User clicks Submit, triggering: submitStatement -> fillCategores,saveEntries
-
-  logAll(){
-    console.log(this.uniqueNewFirstWords);
-  }
-
-  checkHasMultipleTransactions(uniqueNewFirstWord: string): boolean {
-    var uniqueTransactionNames:string[] = [];
-
-    for(let entry of this.newEntries){
-      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
-          && !uniqueTransactionNames.includes(entry.name)){
-        uniqueTransactionNames.push(entry.name);
-        if(uniqueTransactionNames.length > 1){ return true;}
-      }
-    }
-    return false;
-  }
-
-  splitTransactionSetModal(uniqueNewFirstWord: string): void {
-    this.transactionSet = [];
-    this.selectedTransactionSet = uniqueNewFirstWord;
-
-    for(let entry of this.newEntries){
-      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
-          && !this.transactionSet.includes(entry.name)){
-        this.transactionSet.push(entry.name);
-      }
-    }
-    
-    const splitTransactionSetModalElement = <HTMLElement> document.getElementById("splitTransactionSetModal");
-    const splitTransactionSetModal = new Modal(splitTransactionSetModalElement);
-    splitTransactionSetModal.show();
-  }
-
-  splitTransaction(): void {
-    var transactionSetIndex = this.uniqueNewFirstWords[1].indexOf(this.selectedTransactionSet);
-    this.uniqueNewFirstWords[0].splice(transactionSetIndex,1, ...this.transactionSet);
-    this.uniqueNewFirstWords[1].splice(transactionSetIndex,1, ...this.transactionSet);
-
-    this.transactionSet = [];
-    this.selectedTransactionSet = "";
-  }
-
-  onCategoryChange(event: any): void {
-    const selectElement = (event.target as HTMLSelectElement)
-
-    if(selectElement.value === "new-category"){
-      const dialogRef = this.openNewCategoryDialog();
-
-      dialogRef.afterClosed().subscribe(
-        newCategory => {//update and sort category list
-          if(newCategory != undefined){
-            this.dbCategories.push(newCategory);
-            this.dbCategories.sort((a, b) => 
-              a.localeCompare(b, undefined, { sensitivity: 'base' })
-          );
-          
-          setTimeout(() => {
-            selectElement.value = newCategory;
-          }, 50);
-          }
-        }
-      );
-    }
-
-  }
-
-  createCategoryButton():void {
-    const dialogRef = this.openNewCategoryDialog();
-
-    dialogRef.afterClosed().subscribe(
-      newCategory => {
-        if(newCategory != undefined && newCategory != ""){
-          this.dbCategories.push(newCategory);
-          this.dbCategories.sort((a, b) => 
-            a.localeCompare(b, undefined, { sensitivity: 'base' })
-        );
-        }
-      });
-  }
-
-  openNewCategoryDialog(): MatDialogRef<NewCategoryComponent, any> {
-    return this.dialog.open(NewCategoryComponent,{
-      width: "400px",
-      height: "300px",
-      autoFocus: false,
-    });
-  }
-
-  newAccountButton(): void {
-    this.newAccountName = "";
-
-    const newAccModalElement = <HTMLElement> document.getElementById("newAccountModal");
-    const newAccModal = new Modal(newAccModalElement);
-    newAccModal.show();
-  }
-
-  saveNewAccount(): void {
-    this.dbAccounts.push(this.newAccountName);
-    setTimeout(() => {
-      const newAccountSelectOption = <HTMLOptionElement> document.getElementById(this.newAccountName);
-      if(newAccountSelectOption){
-        newAccountSelectOption.selected = true;
-      }
-      else{
-        console.error("New Account option element not found.")
-      }
-    }, 300);
-    this.selectedAccount = this.newAccountName;
-  }
-
   ngOnInit(){
+    this.loadCategories();
+    this.loadAccounts();
+    this.loadEntries();
+  }
+
+  loadCategories(): void {
     this.transactionService.getCategories().subscribe(
       (categories) => {
         this.dbCategories = [...new Set([...categories, ...this.defaultCategories])];
@@ -215,22 +113,52 @@ export class UploadStatementComponent {
 
       }
     );
+  }
 
+  loadAccounts(): void {
     this.transactionService.getAccounts().subscribe(
       (accounts) => {
         this.dbAccounts = accounts;
         this.dbAccounts.sort();
       }
-    )
-
+    );
   }
+  
+  loadEntries(): void {
+    //calls the right service and fills dbEntries
+    this.dbEntries = [];
+
+    this.transactionService.getAllTransactions().subscribe(
+      (trans: Transaction[]) => {
+        this.dbEntries = trans;
+        this.findUniqueDbNames();
+      }
+    );
+  }
+
+  findUniqueDbNames(): void{
+    //populates uniqueDbNames
+    this.uniqueDbNames = [];
+
+    for(let entry of this.dbEntries){
+      if(!this.uniqueDbNames.includes(entry.name)){
+        this.uniqueDbNames.push(entry.name);
+      }
+    }
+  }
+
+  //Process Flow
+  //User uploads file, triggering: onFileUpload -> loadEntries -> findUniqueDbNames
+  //User clicks Process File, triggering: readCsv -> makeEntries
+  //User clicks Submit, triggering: submitStatement -> fillCategores,saveEntries
+
 
   //START File Upload Flow
   onFileSelected(event: any): void {
     this.csvData = [];
     this.dbEntries = [];
     this.newEntries = [];
-    this.uniqueNewFirstWords = [[],[]]; //[[unique first word], [common substring]]
+    this.transactionSets = [[],[]]; //[[unique first word], [common substring]]
     this.uniqueDbNames = [];
 
     this.file = event.target.files[0];
@@ -261,28 +189,26 @@ export class UploadStatementComponent {
     this.loadEntries();
   }
   
-  loadEntries(): void {
-    //calls the right service and fills dbEntries
-    this.dbEntries = [];
+  newAccountButton(): void {
+    this.newAccountName = "";
 
-    this.transactionService.getAllTransactions().subscribe(
-      (trans: Transaction[]) => {
-        this.dbEntries = trans;
-        this.findUniqueDbNames();
-      }
-    );
-    
+    const newAccModalElement = <HTMLElement> document.getElementById("newAccountModal");
+    const newAccModal = new Modal(newAccModalElement);
+    newAccModal.show();
   }
 
-  findUniqueDbNames(): void{
-    //populates uniqueDbNames
-    this.uniqueDbNames = [];
-
-    for(let entry of this.dbEntries){
-      if(!this.uniqueDbNames.includes(entry.name)){
-        this.uniqueDbNames.push(entry.name);
+  saveNewAccount(): void {
+    this.dbAccounts.push(this.newAccountName);
+    setTimeout(() => {
+      const newAccountSelectOption = <HTMLOptionElement> document.getElementById(this.newAccountName);
+      if(newAccountSelectOption){
+        newAccountSelectOption.selected = true;
       }
-    }
+      else{
+        console.error("New Account option element not found.")
+      }
+    }, 300);
+    this.selectedAccount = this.newAccountName;
   }
 
   //START Process File Flow
@@ -303,7 +229,7 @@ export class UploadStatementComponent {
         complete: (result) => {
           this.csvData = result.data;
           this.makeNewEntries();
-          this.makeUniqueNewFirstWords();
+          // this.makeTransactionSets();
           this.fileProcessed = true;
         },
         header: false  // Set to true if CSV has headers
@@ -325,6 +251,8 @@ export class UploadStatementComponent {
   makeNewEntries(): void{
     //sets newEntries from csvData
     this.newEntries = [];
+    this.transactionSets = {};
+    this.transactionSetsKeys = [];
 
     //removes empty entry at the end
     this.csvData.splice(this.csvData.length - 1, 1);
@@ -337,7 +265,7 @@ export class UploadStatementComponent {
     //Should be upgraded to check if first word of new transaction matches first word of present uniqueDbNames
     for(let i = this.csvData.length - 1; i > -1; i--){
 
-      let newEntry: any;
+      let newEntry: Transaction = emptyTransaction();
       let balanceChange: number = 0;
 
       //this decides whether the entry is an loss or a gain
@@ -390,10 +318,22 @@ export class UploadStatementComponent {
         }
       }
 
+      this.makeTransactionSets(newEntry)
+    }
+
+    this.transactionSetsKeys = Object.keys(this.transactionSets)
+
+  }
+
+  
+  
+  //dead function?
+  makeTransactionSets(newEntry: Transaction): void{
+      //if the entry.name is in database, auto-category
+      //otherwise create a selectedTransactionSet
       if(this.uniqueDbNames.includes(newEntry.name)){
         newEntry.category = this.dbEntries.find(t => t.name === newEntry.name)?.category;
         if(!this.dbEntries.includes(newEntry)){
-          console.log('pushing entry');
           this.newEntries.push(newEntry);
         }
         else{
@@ -402,33 +342,36 @@ export class UploadStatementComponent {
       }
       else{
         this.newEntries.push(newEntry);
-      }
-    }
-  }
-  
-  makeUniqueNewFirstWords(): void{
-    //sets uniqueNewFirstWords
-    //sets uniqueNewNameEntries
-    this.uniqueNewFirstWords = [[],[]];
-    var uniqueNewNameEntries = [];
 
-    for(let entry of this.newEntries){
-      if(!uniqueNewNameEntries.map( e => e.name).includes(entry.name)){
-        if(!this.uniqueDbNames.includes(entry.name)){
-          uniqueNewNameEntries.push(entry);
-          
-          var entryFirstWord: string = entry.name.split(" ")[0];
-          if(this.uniqueNewFirstWords[0].includes(entryFirstWord)){
-            var wordIndex = this.uniqueNewFirstWords[0].indexOf(entryFirstWord)
-            this.uniqueNewFirstWords[1][wordIndex] = this.commonSubstring(this.uniqueNewFirstWords[1][wordIndex], entry.name);
-          }
-          else{
-            this.uniqueNewFirstWords[0].push(entryFirstWord);
-            this.uniqueNewFirstWords[1].push(entry.name);
-          }
+        
+        var entryFirstWord: string = newEntry.name.split(" ")[0];
+
+        if(this.transactionSets[entryFirstWord] != undefined){
+          this.transactionSets[entryFirstWord] = this.commonSubstring(this.transactionSets[entryFirstWord], newEntry.name);
+        }
+        else{
+          this.transactionSets[entryFirstWord] = newEntry.name;
         }
       }
-    }
+
+    // //sets transactionSets
+    // this.transactionSets = {};
+
+    // //group transactions together based on their first word
+    // //transactionSets has structure { entryFirstWord: string = intersection of all names with same first word}
+    // for(let entry of this.newEntries){
+    //   if(!this.uniqueDbNames.includes(entry.name)){
+    //     var entryFirstWord: string = entry.name.split(" ")[0];
+    //     if(this.transactionSets[0].includes(entryFirstWord)){
+    //       var wordIndex = this.transactionSets[0].indexOf(entryFirstWord)
+    //       this.transactionSets[1][wordIndex] = this.commonSubstring(this.transactionSets[1][wordIndex], entry.name);
+    //     }
+    //     else{
+    //       this.transactionSets[0].push(entryFirstWord);
+    //       this.transactionSets[1].push(entry.name);
+    //     }
+    //   }      
+    // }
 
 
   }
@@ -461,6 +404,90 @@ export class UploadStatementComponent {
     return +total.toFixed(2);
   }
 
+  checkHasMultipleTransactions(uniqueNewFirstWord: string): boolean {
+    var uniqueTransactionNames:string[] = [];
+
+    for(let entry of this.newEntries){
+      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
+          && !uniqueTransactionNames.includes(entry.name)){
+        uniqueTransactionNames.push(entry.name);
+        if(uniqueTransactionNames.length > 1){ return true;}
+      }
+    }
+    return false;
+  }
+
+  splitTransactionSetModal(uniqueNewFirstWord: string): void {
+    this.selectedTransactionSet = [];
+    this.selectedTransactionSetName = uniqueNewFirstWord;
+
+    for(let entry of this.newEntries){
+      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
+          && !this.selectedTransactionSet.includes(entry.name)){
+        this.selectedTransactionSet.push(entry.name);
+      }
+    }
+    
+    const splitTransactionSetModalElement = <HTMLElement> document.getElementById("splitTransactionSetModal");
+    const splitTransactionSetModal = new Modal(splitTransactionSetModalElement);
+    splitTransactionSetModal.show();
+  }
+
+  splitTransaction(): void {
+    var transactionSetIndex = this.transactionSets[1].indexOf(this.selectedTransactionSetName);
+    this.transactionSets[0].splice(transactionSetIndex,1, ...this.selectedTransactionSet);
+    this.transactionSets[1].splice(transactionSetIndex,1, ...this.selectedTransactionSet);
+
+    this.selectedTransactionSet = [];
+    this.selectedTransactionSetName = "";
+  }
+
+  onCategoryChange(event: any): void {
+    const selectElement = (event.target as HTMLSelectElement)
+
+    if(selectElement.value === "new-category"){
+      const dialogRef = this.openNewCategoryDialog();
+
+      dialogRef.afterClosed().subscribe(
+        newCategory => {//update and sort category list
+          if(newCategory != undefined){
+            this.dbCategories.push(newCategory);
+            this.dbCategories.sort((a, b) => 
+              a.localeCompare(b, undefined, { sensitivity: 'base' })
+          );
+          
+          setTimeout(() => {
+            selectElement.value = newCategory;
+          }, 50);
+          }
+        }
+      );
+    }
+
+  }
+
+  createCategoryButton():void {
+    const dialogRef = this.openNewCategoryDialog();
+
+    dialogRef.afterClosed().subscribe(
+      newCategory => {
+        if(newCategory != undefined && newCategory != ""){
+          this.dbCategories.push(newCategory);
+          this.dbCategories.sort((a, b) => 
+            a.localeCompare(b, undefined, { sensitivity: 'base' })
+        );
+        }
+      });
+  }
+
+  openNewCategoryDialog(): MatDialogRef<NewCategoryComponent, any> {
+    return this.dialog.open(NewCategoryComponent,{
+      width: "400px",
+      height: "300px",
+      autoFocus: false,
+    });
+  }
+
   //START Submit Statement Flow
 
   showSubmissionModal(): void {
@@ -477,11 +504,11 @@ export class UploadStatementComponent {
   //must be changed to add categories for duplicate entries with the same name
   fillCategories(): boolean{
     //returns true if all categories are filled
-    for(let i=0; i < this.uniqueNewFirstWords[1].length;i++){
-      const dropdownElement = (<HTMLInputElement>document.getElementById("dropdown" + i));
+    for(let key of this.transactionSetsKeys){
+      const dropdownElement = (<HTMLInputElement>document.getElementById("dropdown" + key));
       if(dropdownElement){
         for(let entry of this.newEntries){
-          if(entry.name.indexOf(this.uniqueNewFirstWords[1][i]) === 0){
+          if(entry.name.indexOf(this.transactionSets[key]) === 0){
             entry.category = dropdownElement.value;
           }
         }

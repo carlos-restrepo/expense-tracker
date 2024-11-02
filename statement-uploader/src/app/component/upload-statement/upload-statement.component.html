@@ -44,9 +44,11 @@
         </button> -->
     </div> 
 
+    
+
     <div *ngIf="fileProcessed" id="statement-table">
         <div class="row border rounded shadow justify-content-center bg-light mt-4">
-            @if(uniqueNewFirstWords[0].length > 0){
+            @if(transactionSetsKeys.length > 0){
                 <div class="row py-4 justify-content-center">
                     <div class="col-4 d-flex">
                         <span class="badge text-black rounded-pill bg-warning py-2 px-4 mx-auto">
@@ -74,9 +76,9 @@
 
 
                 <!-- Transaction Table -->
-                 <div class="col-1">
+                <div class="col-1">
 
-                 </div>
+                </div>
                 <div class="col-10">
                     <div class="border rounded">
                         <table class="table table-striped table-light rounded-2">
@@ -88,29 +90,29 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr *ngFor="let name of uniqueNewFirstWords[1]; let i = index">
+                                <tr *ngFor="let key of transactionSetsKeys; let i = index">
                                     <!-- Transaction Name -->
                                     <td>
-                                        @if(checkHasMultipleTransactions(name)){
+                                        @if(checkHasMultipleTransactions(transactionSets[key])){
                                             <button class="btn bg-light-yellow-hover"
                                                     tabindex="-1" 
-                                                    (click)="splitTransactionSetModal(name)">
-                                                {{ name }}
+                                                    (click)="splitTransactionSetModal(transactionSets[key])">
+                                                {{ transactionSets[key] }}
                                             </button>
                                         }
                                         @else{
                                             <p class="ps-2">
-                                                {{ name }}
+                                                {{ transactionSets[key] }}
                                             </p>
                                         }
                                     </td>
                                     <!-- Amount -->
                                     <td>
-                                        {{ sumUniqueNewFirstWord(name) }}
+                                        {{ sumUniqueNewFirstWord(transactionSets[key]) }}
                                     </td>
                                     <!-- Category -->
                                     <td>
-                                        <select class="form-select" [attr.id]="'dropdown' + i" (change)="onCategoryChange($event)">
+                                        <select class="form-select" [attr.id]="'dropdown' + key" (change)="onCategoryChange($event)">
                                             <option value="" selected disabled>Select Category</option>
                                             <option value="new-category" class="bg-light-yellow">New Category</option>
                                             <option *ngFor="let category of dbCategories" [value]="category">{{ category }}</option>
@@ -122,7 +124,7 @@
                     </div>
                 </div>
             }
-            @if(uniqueNewFirstWords[0].length === 0){
+            @if(transactionSetsKeys.length === 0){
                 <div class="col-3 mt-3 d-flex">
                     <span class="badge text-black rounded-pill bg-warning py-2 px-4 mx-auto">
                     <h4>
@@ -185,10 +187,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let transactionName of transactionSet; let i = index">
-                                <!-- Transaction Name -->
+                            <!-- <tr *ngFor="let transactionName of transactionSet; let i = index">
+                                Transaction Name
                                 <td>{{ transactionName }}</td>
-                            </tr>
+                            </tr> -->
                         </tbody>
                     </table>
                 </div>          

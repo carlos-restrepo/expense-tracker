@@ -26,11 +26,11 @@ export class AnalyticsComponent {
   filteredDbTransactions: Transaction[] = [];
 
   dbCategories: string[] = [];
-  blacklistDefault: string[] = ["Internal", "Transfers"];
+  BLACKLIST_DEFAULT: string[] = ["Internal", "Transfers"];
   blacklistCategories: string[] = [];
   filterCategories: string[] = [];
 
-  blacklistMonthDefault: string[] = ["Internal", "Transfers","Mortgage"];
+  BLACKLIST_MONTH_DEFAULT: string[] = ["Internal", "Transfers","Mortgage"];
   blacklistMonthCategories: string[] = [];
   filterMonthCategories: string[] = [];
 
@@ -68,8 +68,13 @@ export class AnalyticsComponent {
 
   ngOnInit(){
     this.initCategories();
-    this.initAccounts();
-    this.initTransactions();
+    setTimeout(() => {
+      this.initAccounts();
+      setTimeout(() => {
+        this.initTransactions();
+      }, 50);
+    }, 500);
+
   }
 
   initTransactions(): void {
@@ -99,6 +104,7 @@ export class AnalyticsComponent {
       (categories) => {
         this.dbCategories = this.dbCategories.concat(categories);
         this.blacklistCategories = this.blacklistCategories.concat(categories);
+        console.log(this.blacklistCategories)
         this.blacklistMonthCategories = this.blacklistMonthCategories.concat(categories);
 
         this.initBlacklistDefault();
@@ -112,10 +118,11 @@ export class AnalyticsComponent {
   }
 
   initBlacklistDefault(): void {
-    for(let category of this.blacklistDefault){
-      this.blacklistCategories.splice(
-        this.blacklistCategories.indexOf(category),1
-      );
+    for(let category of this.BLACKLIST_DEFAULT){
+      var index = this.blacklistCategories.indexOf(category);
+      if(index > 0){
+        this.blacklistCategories.splice(index,1);
+      }
       setTimeout(() => {
         const categoryCheckbox = document.getElementById(category + 'Blacklist') as HTMLInputElement;
         if(categoryCheckbox){
@@ -126,7 +133,7 @@ export class AnalyticsComponent {
   }
 
   initBlacklistMonthDefault(): void {
-    for(let category of this.blacklistMonthDefault){
+    for(let category of this.BLACKLIST_MONTH_DEFAULT){
       this.blacklistMonthCategories.splice(
         this.blacklistMonthCategories.indexOf(category),1
       );
@@ -168,7 +175,6 @@ export class AnalyticsComponent {
 
   getMonthTotals(): void {
     this.monthTotals = [];
-
     for(let month of this.selectedYyyymm){
       var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
         return val.yyyymm === month;
