@@ -15,6 +15,6 @@ import { MarkdownModule } from 'ngx-markdown';
 })
 export class DisplayProductsComponent {
 
-  testLatex: string = "$x+y$"
+  testLatex: string = "\\\(test + \\\)"
 
 }

@@ -1,0 +1,1 @@
+$(A\times A) \cap (B\times B) = (A\cap B) \times (A\cap B)$
