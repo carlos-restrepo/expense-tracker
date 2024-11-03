@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction } from '../../models/transaction.model';
 import { CommonModule } from '@angular/common';
-import { MonYearPipe } from '../../pipes/mon-year.pipe';
 import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
 import { FormsModule } from '@angular/forms';
+import { MonYearPipe } from '../../pipes/mon-year.pipe';
 declare const CanvasJS: any;
 
 @Component({
@@ -15,7 +15,7 @@ declare const CanvasJS: any;
   imports: [
     CommonModule,
     FormsModule,
-    // MonYearPipe
+    MonYearPipe
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
@@ -104,7 +104,6 @@ export class AnalyticsComponent {
       (categories) => {
         this.dbCategories = this.dbCategories.concat(categories);
         this.blacklistCategories = this.blacklistCategories.concat(categories);
-        console.log(this.blacklistCategories)
         this.blacklistMonthCategories = this.blacklistMonthCategories.concat(categories);
 
         this.initBlacklistDefault();
@@ -134,9 +133,10 @@ export class AnalyticsComponent {
 
   initBlacklistMonthDefault(): void {
     for(let category of this.BLACKLIST_MONTH_DEFAULT){
-      this.blacklistMonthCategories.splice(
-        this.blacklistMonthCategories.indexOf(category),1
-      );
+      var index = this.blacklistMonthCategories.indexOf(category);
+      if(index > 0){
+        this.blacklistMonthCategories.splice(index,1);
+      }
       setTimeout(() => {
         const categoryCheckbox = document.getElementById(category + 'MonthBlacklist') as HTMLInputElement;
         if(categoryCheckbox){
@@ -278,7 +278,7 @@ export class AnalyticsComponent {
       }]
     });
     
-     var monthDataPoints = [];
+    var monthDataPoints = [];
 
     for(let category of this.blacklistCategories){
       monthDataPoints.push({
@@ -289,9 +289,10 @@ export class AnalyticsComponent {
         },
         indexLabelBorderColor: "#333333",
         indexLabelBorderThickness: 0.5,
-        indexLabelFontSize: 15,
+        indexLabelFontSize: 20,
         indexLabelFontColor: "#000000",
-        indexLabelBackgroundColor: "#f9e3a7"
+        indexLabelBackgroundColor: "#f9e3a7",
+        color: '#cccccc',
       });
     }
     
@@ -312,6 +313,9 @@ export class AnalyticsComponent {
     monthDataPoints = monthDataPoints.filter(v => v.y > 0);
     monthDataPoints.sort((a,b) => a.y - b.y); //sort and cut off top 5
     monthDataPoints = monthDataPoints.slice(-5);
+
+    monthDataPoints[monthDataPoints.length - 1].color = '#c8930d'
+    monthDataPoints[monthDataPoints.length - 2].color = '#c8930d'
     
     this.monthChart.options.data[0].dataPoints = monthDataPoints;
     this.monthChart.render();

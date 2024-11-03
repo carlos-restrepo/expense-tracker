@@ -9,6 +9,7 @@ import { NewCategoryComponent } from '../../dialog/new-category/new-category.com
 import { emptyTransaction, Transaction } from '../../models/transaction.model';
 import * as Papa from 'papaparse';
 import { Modal } from 'bootstrap';
+import { SubmittedTransactionsComponent } from '../../dialog/submitted-transactions/submitted-transactions.component';
 
 @Component({
   selector: 'app-upload-statement',
@@ -50,6 +51,7 @@ export class UploadStatementComponent {
   dbAccounts: string[] = [];
 
   newEntries: Transaction[] = [];
+  recognizedNewEntries: Transaction[] = [];
   duplicateNewEntries: Transaction[] = [];
 
   
@@ -250,6 +252,7 @@ export class UploadStatementComponent {
 
   makeNewEntries(): void{
     //sets newEntries from csvData
+    //makes transactionSets when name not found in db
     this.newEntries = [];
     this.transactionSets = {};
     this.transactionSetsKeys = [];
@@ -262,7 +265,6 @@ export class UploadStatementComponent {
       this.csvData.splice(0, 1);
     }
 
-    //Should be upgraded to check if first word of new transaction matches first word of present uniqueDbNames
     for(let i = this.csvData.length - 1; i > -1; i--){
 
       let newEntry: Transaction = emptyTransaction();
@@ -318,62 +320,52 @@ export class UploadStatementComponent {
         }
       }
 
-      this.makeTransactionSets(newEntry)
-    }
-
-    this.transactionSetsKeys = Object.keys(this.transactionSets)
-
-  }
-
-  
-  
-  //dead function?
-  makeTransactionSets(newEntry: Transaction): void{
-      //if the entry.name is in database, auto-category
+      
+      //if the entry is in database, put into recognized or duplicate new entries
       //otherwise create a selectedTransactionSet
       if(this.uniqueDbNames.includes(newEntry.name)){
-        newEntry.category = this.dbEntries.find(t => t.name === newEntry.name)?.category;
-        if(!this.dbEntries.includes(newEntry)){
-          this.newEntries.push(newEntry);
+        var match = this.dbEntries.filter( val => {
+          return val.name == newEntry.name &&
+                  val.date == newEntry.date &&
+                  val.amount == newEntry.amount;
+        });
+        console.log(match);
+        console.log(newEntry);
+        if(match.length != 0){
+          this.duplicateNewEntries.push(newEntry);
         }
         else{
-          this.duplicateNewEntries.push(newEntry);
+          newEntry.category = this.dbEntries.find(t => t.name === newEntry.name)?.category;
+          this.recognizedNewEntries.push(newEntry);
         }
       }
       else{
         this.newEntries.push(newEntry);
-
-        
-        var entryFirstWord: string = newEntry.name.split(" ")[0];
-
-        if(this.transactionSets[entryFirstWord] != undefined){
-          this.transactionSets[entryFirstWord] = this.commonSubstring(this.transactionSets[entryFirstWord], newEntry.name);
-        }
-        else{
-          this.transactionSets[entryFirstWord] = newEntry.name;
-        }
+        this.makeTransactionSet(newEntry);
       }
+    }
+    
+    this.transactionSetsKeys = Object.keys(this.transactionSets)
 
-    // //sets transactionSets
-    // this.transactionSets = {};
+    if(this.duplicateNewEntries.length !=0){
+      this.dialog.open(SubmittedTransactionsComponent, {
+        data: {
+          duplicateEntries: this.duplicateNewEntries,
+        }
+      });
+    }
 
-    // //group transactions together based on their first word
-    // //transactionSets has structure { entryFirstWord: string = intersection of all names with same first word}
-    // for(let entry of this.newEntries){
-    //   if(!this.uniqueDbNames.includes(entry.name)){
-    //     var entryFirstWord: string = entry.name.split(" ")[0];
-    //     if(this.transactionSets[0].includes(entryFirstWord)){
-    //       var wordIndex = this.transactionSets[0].indexOf(entryFirstWord)
-    //       this.transactionSets[1][wordIndex] = this.commonSubstring(this.transactionSets[1][wordIndex], entry.name);
-    //     }
-    //     else{
-    //       this.transactionSets[0].push(entryFirstWord);
-    //       this.transactionSets[1].push(entry.name);
-    //     }
-    //   }      
-    // }
+  }
 
+  makeTransactionSet(newEntry: Transaction): void{    
+    var entryFirstWord: string = newEntry.name.split(" ")[0];
 
+    if(this.transactionSets[entryFirstWord] != undefined){
+      this.transactionSets[entryFirstWord] = this.commonSubstring(this.transactionSets[entryFirstWord], newEntry.name);
+    }
+    else{
+      this.transactionSets[entryFirstWord] = newEntry.name;
+    }
   }
 
   commonSubstring(str1: string, str2: string) {
@@ -417,6 +409,8 @@ export class UploadStatementComponent {
     return false;
   }
 
+  //this should be changed to be a dialog which looks like a modal and feeds
+  //selectedTransactionSet as a parameter instead of having it global
   splitTransactionSetModal(uniqueNewFirstWord: string): void {
     this.selectedTransactionSet = [];
     this.selectedTransactionSetName = uniqueNewFirstWord;
@@ -482,9 +476,9 @@ export class UploadStatementComponent {
 
   openNewCategoryDialog(): MatDialogRef<NewCategoryComponent, any> {
     return this.dialog.open(NewCategoryComponent,{
-      width: "400px",
-      height: "300px",
-      autoFocus: false,
+      // width: "400px",
+      // height: "300px",
+      // autoFocus: false,
     });
   }
 
@@ -517,7 +511,7 @@ export class UploadStatementComponent {
 
     //check for entries with empty category
     for(let entry of this.newEntries){
-      if(entry.category == ''){ console.log(entry); return false;}
+      if(entry.category == ''){ return false;}
     }
     return true;
   }

@@ -47,6 +47,21 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     background-color:#f9e3a7 !important;
 }
 
+.bg-off-white{
+    background-color: #fafafa;
+}
+
+.clickable-text{
+    border: 0.05em solid;
+    border-color: #c8930d;
+    background-color: #f9e3a7;
+    padding: 5px;
+}
+
+.clickable-text:hover{
+    background-color:#ffc107;
+}
+
 .min-vh-10 {
     min-height: 10vh;
 }
@@ -90,7 +105,6 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .min-vh-100 {
     min-height: 100vh;
 }
-
 
 /* width */
 ::-webkit-scrollbar {
