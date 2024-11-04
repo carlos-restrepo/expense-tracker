@@ -51,6 +51,14 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     background-color: #fafafa;
 }
 
+.bg-light-grey{
+    background-color: #cccccc;
+}
+
+.clickable-icon{
+    cursor: pointer;
+}
+
 .clickable-text{
     border: 0.05em solid;
     border-color: #c8930d;

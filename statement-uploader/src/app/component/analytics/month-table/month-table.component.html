@@ -1,0 +1,94 @@
+
+<div class="border bg-light rounded shadow p-2">
+    <div class="table-scrollable">
+      <table class="table table-striped table-light pt-1" style="height: 400px;">
+        <thead class="sticky-div">
+          <tr>
+            <th>
+              <div class="d-flex rounded bg-light-grey clickable-icon" (click)="sortMonthTableByTransaction()">
+                Transaction Name
+                <i class="bi bi-sort-down-alt clickable-icon"></i>
+              </div>
+            </th>
+            <th>
+              <span class="text-decoration-underline">
+              Amount
+              </span>
+              <i class="bi bi-sort-down-alt clickable-icon"></i>
+            </th>
+            <th>
+              <!-- Category filters -->
+              <div class="d-flex">
+                <span class="text-decoration-underline">
+                  Category
+                </span>
+                <i class="bi bi-sort-down-alt clickable-icon"></i>
+                <div class="d-flex dropdown ms-auto">
+                  <div class="badge bg-warning" style="cursor: pointer;">
+                    <i class="bi bi-filter-circle-fill text-dark fs-6" data-bs-toggle="dropdown"></i>
+
+                    <!-- Dropdown menu -->
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                      <li *ngFor="let category of dbCategories">
+                        <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleMonthCategoryFilter(category)">
+                            <input type="checkbox" id="{{category}}MonthFilter" value="{{category}}MonthFilter">
+                            <label class="ps-2" for="{{category}}MonthFilter" style="user-select: none;">{{ category }}</label>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="badge bg-dark " style="cursor: pointer;">
+                    <div class="my-auto">
+                      <i class="bi bi-slash-circle fs-6" data-bs-toggle="dropdown"></i>
+
+                      <!-- Dropdown menu -->
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li *ngFor="let category of dbCategories">
+                          <div class="dropdown-item" (click)="$event.stopPropagation()" (click)="toggleMonthBlacklistFilter(category)">
+                              <input type="checkbox" id="{{category}}MonthBlacklist" value="{{category}}MonthBlacklist">
+                              <label class="ps-2" for="{{category}}MonthBlacklist" style="user-select: none;">{{ category }}</label>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let entry of monthTable">
+              <!-- Transaction Name -->
+              <td>
+                {{ entry.name }}
+              </td>
+              <!-- Amount -->
+              <td>
+                {{ entry.amount | currency }}
+              </td>
+              <!-- Category Rows-->
+              <td>
+                <div class="d-flex">
+                  <p class="clickable-text w-75 rounded py-0 m-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                      {{ entry.category }}
+                  </p>
+                  <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <li>
+                      <div class="dropdown-item bg-light-yellow" (click)="createCategoryButton(entry)">
+                        <label class="ps-2">New Category</label>
+                      </div>
+                    </li>
+                      <li *ngFor="let category of dbCategories">
+                        <div class="dropdown-item" (click)="changeTransactionCategory(entry.name, category)">
+                            <label class="ps-2">{{ category }}</label>
+                        </div>
+                      </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+</div>

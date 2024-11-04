@@ -163,18 +163,24 @@
               <thead class="sticky-div">
                 <tr>
                   <th>
-                    Transaction Name
-                    <i class="bi bi-sort-down"></i>
+                    <div class="d-flex rounded bg-light-grey clickable-icon" (click)="sortMonthTableByTransaction()">
+                      Transaction Name
+                      <i class="bi bi-sort-down-alt clickable-icon"></i>
+                    </div>
                   </th>
-                  <th><span class="text-decoration-underline">
-                    Amount 
-                  </span></th>
+                  <th>
+                    <span class="text-decoration-underline">
+                    Amount
+                    </span>
+                    <i class="bi bi-sort-down-alt clickable-icon"></i>
+                  </th>
                   <th>
                     <!-- Category filters -->
                     <div class="d-flex">
                       <span class="text-decoration-underline">
                         Category
                       </span>
+                      <i class="bi bi-sort-down-alt clickable-icon"></i>
                       <div class="d-flex dropdown ms-auto">
                         <div class="badge bg-warning" style="cursor: pointer;">
                           <i class="bi bi-filter-circle-fill text-dark fs-6" data-bs-toggle="dropdown"></i>

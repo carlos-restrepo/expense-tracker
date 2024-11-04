@@ -15,7 +15,7 @@ declare const CanvasJS: any;
   imports: [
     CommonModule,
     FormsModule,
-    MonYearPipe
+    MonYearPipe,
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
@@ -79,8 +79,8 @@ export class AnalyticsComponent {
 
   initTransactions(): void {
     this.transactionService.getAllTransactions().subscribe(
-      (trans: Transaction[]) => {
-        this.dbTransactions = trans;
+      (dbTrans: Transaction[]) => {
+        this.dbTransactions = dbTrans;
         this.initUniqueYyyymm();
         this.updateFilteredDbTransactions();
         this.updateMonth();
@@ -485,6 +485,7 @@ export class AnalyticsComponent {
   }
 
   createCategoryButton(transaction: Transaction):void {
+    alert('test')
     const dialogRef = this.dialog.open(NewCategoryComponent,{
       width: "400px",
       height: "300px",
@@ -493,8 +494,6 @@ export class AnalyticsComponent {
     dialogRef.afterClosed().subscribe(
       newCategory => {
         if(newCategory != undefined){
-          // this.dbCategories.push(newCategory);
-          // this.dbCategories.sort();
           const confirmDialogRef = this.dialog.open(UpdateCategoryConfirmComponent,{
             data: {
               name: transaction.name,
@@ -527,8 +526,7 @@ export class AnalyticsComponent {
       }
     }
 
-    this.updateFilteredDbTransactions();
-
+    this.updateMonth();
   }
 
   toggleMonthCategoryFilter(category: string): void {
@@ -578,6 +576,11 @@ export class AnalyticsComponent {
     }
 
     this.updateFilteredDbTransactions();
+    this.updateMonth();
+  }
+
+  sortMonthTableByTransaction(): void {
+    this.monthTable.sort();
     this.updateMonth();
   }
 }

@@ -249,7 +249,7 @@ export class UploadStatementComponent {
       }
     }, 100);
   }
-
+  
   makeNewEntries(): void{
     //sets newEntries from csvData
     //makes transactionSets when name not found in db
@@ -382,6 +382,9 @@ export class UploadStatementComponent {
     return common;
   }
 
+
+  // Table view
+
   sumUniqueNewFirstWord(uniqueName: string): number{
     
     var total: number = 0;
@@ -480,6 +483,10 @@ export class UploadStatementComponent {
       // height: "300px",
       // autoFocus: false,
     });
+  }
+
+  onTransactionDelete(): void {
+    
   }
 
   //START Submit Statement Flow
