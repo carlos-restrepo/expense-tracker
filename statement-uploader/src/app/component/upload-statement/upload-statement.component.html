@@ -16,7 +16,6 @@
                     
                     <select id="accountSelect" 
                             formControlName="accountSelect"
-                            [(ngModel)]="selectedAccount"
                             class="form-select"
                             name="accountSelect">
                         <option *ngFor="let account of dbAccounts" 
@@ -39,14 +38,10 @@
                 </div>
             </form>
         </div>
-        <!-- <button class="btn btn-danger" 
-                (click)="logAll()">
-            Log
-        </button> -->
     </div> 
 
     <div *ngIf="fileProcessed" id="statement-table">
-        @if(transactionSetsKeys.length != 0){
+        @if(newExpenseSets.length != 0){
             <div class="row border rounded shadow justify-content-center bg-light mt-4">
                 <div class="row py-4 justify-content-center">
                     <div class="col-12 d-flex">
@@ -86,7 +81,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr *ngFor="let key of transactionSetsKeys">
+                                <tr *ngFor="let newSet of newExpenseSets">
                                     <!-- Delete Buttons -->
                                     <td class="text-center">
                                         <button class="btn btn-dark py-0 px-1" tabindex="-1" (click)="onTransactionDelete()">
@@ -95,26 +90,26 @@
                                     </td>
                                     <!-- Transaction Name -->
                                     <td>
-                                        @if(checkHasMultipleTransactions(transactionSets[key])){
+                                        @if(newSet.expenseNameList.length > 1){
                                             <button class="rounded bg-light-yellow-hover"
                                                     tabindex="-1" 
-                                                    (click)="splitTransactionSetModal(transactionSets[key])">
-                                                {{ transactionSets[key] }}
+                                                    (click)="splitTransactionSetModal(newSet)">
+                                                {{ newSet.commonSubstring }}
                                             </button>
                                         }
                                         @else{
                                             <p class="ps-2">
-                                                {{ transactionSets[key] }}
+                                                {{ newSet.expenseNameList[0].name }}
                                             </p>
                                         }
                                     </td>
                                     <!-- Amount -->
                                     <td>
-                                        {{ sumUniqueNewFirstWord(transactionSets[key]) }}
+                                        {{ newSet.totalAmount }}
                                     </td>
                                     <!-- Category -->
                                     <td>
-                                        <select class="form-select" [attr.id]="'dropdown' + key" (change)="onCategoryChange($event)">
+                                        <select class="form-select" [attr.id]="'dropdown' + newSet.firstWord" (change)="onCategoryChange($event)">
                                             <option value="" selected disabled>Select Category</option>
                                             <option value="new-category" class="bg-light-yellow">New Category</option>
                                             <option *ngFor="let category of dbCategories" [value]="category">{{ category }}</option>
@@ -128,7 +123,7 @@
                 <div class="col-1"></div>
             </div>
         }
-        @if(transactionSetsKeys.length === 0){
+        @if(newExpenseSets.length === 0){
             <div class="row border rounded shadow justify-content-center bg-light mt-4">
                 <div class="col-3 my-3 d-flex">
                     <span class="badge text-black rounded-pill bg-warning py-2 px-4 mx-auto">
@@ -139,7 +134,7 @@
                 </div>
             </div>
         }
-        @if(recognizedNewEntries.length != 0){
+        @if(recognizedExpenseSets.length != 0){
             <div class="row border rounded shadow justify-content-center bg-light mt-4">
                 <div class="col-lg-3"></div>
                 <div class="d-flex col-lg-6 mt-3 justify-content-center">
@@ -166,16 +161,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let entry of recognizedNewGroups">
+                            <tr *ngFor="let recSet of recognizedExpenseSets">
                                 <td>
-                                    {{ entry.name }}
+                                    {{ recSet.commonSubstring }}
                                 </td>
                                 <td>
-                                    <!-- {{ entry.totalAmount | currency}} -->
+                                    {{ recSet.totalAmount| currency}}
                                 </td>
                                 <td>
-                                    <!-- {{ entry.category }} -->
-                                      test
+                                    {{ recSet.category }}
                                 </td>
                             </tr>
                         </tbody>
@@ -186,9 +180,8 @@
     </div>
 </div>
 
-
 <!-- New Account Modal -->
-<div class="modal fade" id="newAccountModal" tabindex="-1" aria-hidden="true">
+<!-- <div class="modal fade" id="newAccountModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -214,7 +207,7 @@
         </div>
       </div>
     </div>
-</div>
+</div> -->
 
 <!-- Split Transaction Set Modal -->
 <div class="modal fade" id="splitTransactionSetModal" tabindex="-1" aria-hidden="true">
@@ -225,7 +218,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <p>The set {{ selectedTransactionSetName }} contains the following transactions. Click split to give each transaction its own category.</p>
+            <p>The set {{ selectedSetToSplit.commonSubstring }} contains the following transactions. Click split to give each transaction its own category.</p>
             <div class="container">
                 <div class="row m-3">
                     <!-- Transaction Table -->
@@ -236,7 +229,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let transaction of selectedTransactionSet">
+                            <tr *ngFor="let transaction of selectedSetToSplitNames">
                                 <td>{{ transaction }}</td>
                             </tr>
                         </tbody>

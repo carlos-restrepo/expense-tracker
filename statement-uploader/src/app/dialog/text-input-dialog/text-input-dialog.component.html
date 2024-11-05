@@ -1,0 +1,21 @@
+<h2 class="ps-3 pt-2" mat-dialog-title>{{ data.title }}</h2>
+<hr class="m-0">
+<mat-dialog-content>
+    <form class="form-container" [formGroup]="textForm">
+        <div class="flex-column mx-auto my-auto">
+            <div>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        {{ data.label }}
+                    </span>
+                    <input type="text" class="form-control" formControlName="inputText">
+                </div>
+                <!-- <input class="form-control" type="text" placeholder="New category" [(ngModel)] = "inputText" name="inputText"> -->
+            </div>
+            <hr>
+            <div class="d-flex">
+                <button class="btn btn-warning ms-auto" type="submit" (click)="emitInput()">Submit</button>
+            </div>
+        </div>    
+    </form>
+</mat-dialog-content>

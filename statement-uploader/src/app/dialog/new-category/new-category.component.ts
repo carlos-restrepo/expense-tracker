@@ -1,8 +1,6 @@
-import { DialogRef } from '@angular/cdk/dialog';
 import { Component, Optional } from '@angular/core';
 import { FormGroup, FormsModule } from '@angular/forms';
-import { MatDialog, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
-import { dialog } from 'electron';
+import { MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-new-category',

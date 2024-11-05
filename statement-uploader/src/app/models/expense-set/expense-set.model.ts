@@ -1,3 +1,6 @@
+import { TranslationWidth } from "@angular/common"
+import { Transaction } from "../transaction.model"
+
 export interface Expense{
   amount: number,
   date: string
@@ -90,4 +93,23 @@ export function findCommonSubstring(str1: string, str2: string): string {
   }
   
   return common;
+}
+
+export function expenseSetToTransactionList(expenseSet: ExpenseSet, account: string): Transaction[] {
+  var transactionList: Transaction[] = [];
+
+  for(let expenseName of expenseSet.expenseNameList){
+    for(let expense of expenseName.expenseList){
+      const newTransaction: Transaction = {
+        name: expenseName.name,
+        date: expense.date,
+        amount: expense.amount,
+        yyyymm: expense.date.substring(0,7),
+        category: expenseSet.category,
+        account: account
+      }
+      transactionList.push(newTransaction);
+    }
+  }
+  return transactionList;
 }

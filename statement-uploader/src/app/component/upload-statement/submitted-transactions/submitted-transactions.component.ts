@@ -2,7 +2,7 @@ import { Component, Inject, Optional } from '@angular/core';
 import { MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import { Transaction } from '../../../models/transaction.model';
+import { ExpenseName } from '../../../models/expense-set/expense-set.model';
 
 @Component({
   selector: 'app-submitted-transactions',
@@ -18,7 +18,7 @@ import { Transaction } from '../../../models/transaction.model';
 })
 export class SubmittedTransactionsComponent {
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: {duplicateEntries: Transaction[]},
+    @Inject(MAT_DIALOG_DATA) public duplicateExpenseNames: ExpenseName[],
     @Optional() public dialogRef: MatDialogRef<SubmittedTransactionsComponent>,
   ) { }
 

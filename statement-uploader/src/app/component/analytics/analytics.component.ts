@@ -23,6 +23,7 @@ declare const CanvasJS: any;
 export class AnalyticsComponent {
 
   dbTransactions: Transaction[] = [];
+  accountPeriodDbTransactions: Transaction[] = [];
   filteredDbTransactions: Transaction[] = [];
 
   dbCategories: string[] = [];
@@ -82,6 +83,7 @@ export class AnalyticsComponent {
       (dbTrans: Transaction[]) => {
         this.dbTransactions = dbTrans;
         this.initUniqueYyyymm();
+        this.updateAccountPeriodDbTransactions();
         this.updateFilteredDbTransactions();
         this.updateMonth();
         this.updateOvertimeChart();
@@ -159,16 +161,17 @@ export class AnalyticsComponent {
 
   // Data Filters
   
-  updateAccountPeriodData(): void {
-
+  updateAccountPeriodDbTransactions(): void {
+    this.accountPeriodDbTransactions = this.dbTransactions.filter( (val) => {
+      return this.selectedAccounts.includes(val.account)
+          && this.selectedYyyymm.includes(val.yyyymm);
+    });
   }
   
   updateFilteredDbTransactions(): void {
-    this.filteredDbTransactions = this.dbTransactions.filter( (val) => {
+    this.filteredDbTransactions = this.accountPeriodDbTransactions.filter( (val) => {
       return this.blacklistCategories.includes(val.category)
           && this.filterCategories.includes(val.category)
-          && this.selectedAccounts.includes(val.account)
-          && this.selectedYyyymm.includes(val.yyyymm);
     });
     this.getMonthTotals();
   }
@@ -190,12 +193,12 @@ export class AnalyticsComponent {
 
   updateMonth(){
     this.updateSelectedMonthDb();
-    this.changeMonthCategoryChart();
-    this.changeMonthTable();
+    this.updateMonthCategoryChart();
+    this.updateMonthTable();
   }
 
   updateSelectedMonthDb(): void {
-    this.selectedMonthDb  = this.filteredDbTransactions.filter( (val, i, obj) => {
+    this.selectedMonthDb  = this.accountPeriodDbTransactions.filter( (val, i, obj) => {
       return val.yyyymm == this.selectedMonth
       && this.blacklistMonthCategories.includes(val.category);
     });
@@ -262,7 +265,7 @@ export class AnalyticsComponent {
     this.overtimeChart.render();
   }
 
-  changeMonthCategoryChart(): void{
+  updateMonthCategoryChart(): void{
     this.monthChart = new CanvasJS.Chart("monthChart", {
       theme: "light2",
       title: {
@@ -314,14 +317,14 @@ export class AnalyticsComponent {
     monthDataPoints.sort((a,b) => a.y - b.y); //sort and cut off top 5
     monthDataPoints = monthDataPoints.slice(-5);
 
-    monthDataPoints[monthDataPoints.length - 1].color = '#c8930d'
-    monthDataPoints[monthDataPoints.length - 2].color = '#c8930d'
+    // monthDataPoints[monthDataPoints.length - 1].color = '#c8930d'
+    // monthDataPoints[monthDataPoints.length - 2].color = '#c8930d'
     
     this.monthChart.options.data[0].dataPoints = monthDataPoints;
     this.monthChart.render();
   }
 
-  changeMonthTable():void {
+  updateMonthTable():void {
     var monthUniqueNames = this.findUniqueNames();
 
     this.monthTable = [];
@@ -360,7 +363,7 @@ export class AnalyticsComponent {
     this.averageMonthlyTotal = this.periodChangeTotal / this.selectedYyyymm.length;
   }
 
-  // Visuals - changeMonthTable Helpers
+  // Visuals - updateMonthTable Helpers
 
   findUniqueNames(): string[]{
     var uniqueNames: string[] = [];
@@ -455,8 +458,8 @@ export class AnalyticsComponent {
       }
     }
 
+    this.toggleMonthCategoryFilter(category);
     this.updateFilteredDbTransactions();
-    this.updateMonth();
     this.updateOvertimeChart();
   }
 
@@ -553,8 +556,7 @@ export class AnalyticsComponent {
       else{ this.filterMonthCategories = this.filterMonthCategories.concat(this.dbCategories) }
     }
 
-    this.updateFilteredDbTransactions();
-    this.updateMonth();
+    this.updateMonthTable();
   }
 
   toggleMonthBlacklistFilter(category: string): void {

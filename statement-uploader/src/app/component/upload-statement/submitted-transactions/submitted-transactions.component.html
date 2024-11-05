@@ -15,17 +15,17 @@
                 </thead>
                 <tbody>
                     <!-- (click)="onDuplicateRowClick(entry.name)"  -->
-                    <tr class="" *ngFor="let entry of data.duplicateEntries">
+                    <tr class="" *ngFor="let dupeName of duplicateExpenseNames">
                         <!-- <td>
                             <input class="form-check-input" (click)="onDuplicateRowClick(entry.name)" type="checkbox" id="{{entry.name}}Duplicate">
                         </td> -->
                         <!-- Date -->
-                        <td>{{ entry.date }}</td>
+                        <td>{{ dupeName.expenseList[0].date }}</td>
                         <!-- Transaction Name -->
-                        <td>{{ entry.name }}</td>
+                        <td>{{ dupeName.name }}</td>
                         <!-- Amount -->
                         <td>
-                            {{ entry.amount }}
+                            {{ dupeName.expenseList[0].amount }}
                         </td>
                     </tr>
                 </tbody>
