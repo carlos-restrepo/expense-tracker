@@ -1,5 +1,5 @@
 <div class="m-3">
-    <h2 class="ps-3 pt-2" mat-dialog-title>Found Duplicate Transactions!</h2>
+    <h2 class="ps-3 pt-2" mat-dialog-title>Deleting Duplicate Transactions!</h2>
     <hr class="m-0">
     <mat-dialog-content>
         <div  class="flex-column mx-auto my-auto">
@@ -7,17 +7,18 @@
             <table class="table table-striped table-light">
                 <thead>
                     <tr>
-                        <th></th>
+                        <!-- <th></th> -->
                         <th>Date</th>
                         <th>Transaction Name</th>
                         <th>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="" (click)="onDuplicateRowClick(entry.name)" *ngFor="let entry of data.duplicateEntries">
-                        <td>
+                    <!-- (click)="onDuplicateRowClick(entry.name)"  -->
+                    <tr class="" *ngFor="let entry of data.duplicateEntries">
+                        <!-- <td>
                             <input class="form-check-input" (click)="onDuplicateRowClick(entry.name)" type="checkbox" id="{{entry.name}}Duplicate">
-                        </td>
+                        </td> -->
                         <!-- Date -->
                         <td>{{ entry.date }}</td>
                         <!-- Transaction Name -->
@@ -32,7 +33,7 @@
         </div>   
     </mat-dialog-content>
     <mat-dialog-actions>
-        <button mat-dialog-close class="btn btn-secondary ms-auto">Keep selected (not functional)</button>
-        <button mat-dialog-close class="btn btn-danger">Delete duplicates</button>
+        <!-- <button mat-dialog-close class="btn btn-secondary ms-auto">Keep selected (not functional)</button> -->
+        <button mat-dialog-close class="btn btn-warning ms-auto">Please, thanks!</button>
     </mat-dialog-actions>
 </div>

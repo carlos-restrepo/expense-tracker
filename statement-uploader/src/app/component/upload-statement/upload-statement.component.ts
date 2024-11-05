@@ -9,7 +9,11 @@ import { NewCategoryComponent } from '../../dialog/new-category/new-category.com
 import { emptyTransaction, Transaction } from '../../models/transaction.model';
 import * as Papa from 'papaparse';
 import { Modal } from 'bootstrap';
-import { SubmittedTransactionsComponent } from '../../dialog/submitted-transactions/submitted-transactions.component';
+import { SubmittedTransactionsComponent } from './submitted-transactions/submitted-transactions.component';
+import { errorClipboardViewContainerRequired } from 'ngx-markdown';
+import { emptyExpense, emptyExpenseName, emptyExpenseSet, Expense, ExpenseName, ExpenseSet, expenseSetFromExpenseName, findCommonSubstring, insertExpenseNameIntoExpenseSet } from '../../models/expense-set/expense-set.model';
+
+
 
 @Component({
   selector: 'app-upload-statement',
@@ -50,9 +54,16 @@ export class UploadStatementComponent {
 
   dbAccounts: string[] = [];
 
+  newExpenseSets: ExpenseSet[] = [];
+  recognizedExpenseSets: ExpenseSet[] = [];
+  duplicateExpenses: ExpenseName[] = [];
+
   newEntries: Transaction[] = [];
   recognizedNewEntries: Transaction[] = [];
+  recognizedNewGroups: ExpenseName[] = [];
   duplicateNewEntries: Transaction[] = [];
+
+  entriesToSave: Transaction[] = [];
 
   
   //transactionSets has structure { entryFirstWord: string = intersection of all names with same first word}
@@ -77,7 +88,6 @@ export class UploadStatementComponent {
   
 
   //init
-
   constructor(
     private transactionService: TransactionService,
     private debitService: DebitService,
@@ -158,9 +168,13 @@ export class UploadStatementComponent {
   //START File Upload Flow
   onFileSelected(event: any): void {
     this.csvData = [];
-    this.dbEntries = [];
     this.newEntries = [];
-    this.transactionSets = [[],[]]; //[[unique first word], [common substring]]
+    this.recognizedNewEntries = [];
+    this.recognizedNewGroups = [];
+    this.duplicateNewEntries = [];
+
+    this.transactionSets = {};
+    this.transactionSetsKeys = [];
     this.uniqueDbNames = [];
 
     this.file = event.target.files[0];
@@ -231,7 +245,6 @@ export class UploadStatementComponent {
         complete: (result) => {
           this.csvData = result.data;
           this.makeNewEntries();
-          // this.makeTransactionSets();
           this.fileProcessed = true;
         },
         header: false  // Set to true if CSV has headers
@@ -253,10 +266,10 @@ export class UploadStatementComponent {
   makeNewEntries(): void{
     //sets newEntries from csvData
     //makes transactionSets when name not found in db
-    this.newEntries = [];
-    this.transactionSets = {};
-    this.transactionSetsKeys = [];
 
+    //sets newExpenseSets, recognizedExpenseSets, duplicateExpenseNames
+
+    
     //removes empty entry at the end
     this.csvData.splice(this.csvData.length - 1, 1);
 
@@ -267,8 +280,13 @@ export class UploadStatementComponent {
 
     for(let i = this.csvData.length - 1; i > -1; i--){
 
-      let newEntry: Transaction = emptyTransaction();
-      let balanceChange: number = 0;
+      var newExpense: Expense = emptyExpense();
+      var newExpenseName: ExpenseName = emptyExpenseName();
+
+      var newEntry: Transaction = emptyTransaction();
+      var balanceChange: number = 0;
+      var newName: string = '';
+      var formattedDate: string = '';
 
       //this decides whether the entry is an loss or a gain
       //only for Cibc and TdDebit
@@ -281,15 +299,19 @@ export class UploadStatementComponent {
 
 
       if(this.isCibcFile){
-        var transName = this.csvData[i][1];
-        const splitNameList = transName.split(" ").slice(0, -2);
+
+        formattedDate = this.csvData[i][0];
+        
+        newName = this.csvData[i][1];
+
+        const splitNameList = newName.split(" ").slice(0, -2);
         if(splitNameList.length > 0){
-          transName = splitNameList.join(" ");
+          newName = splitNameList.join(" ");
         }
 
         newEntry = {
-          date: this.csvData[i][0],
-          name: transName,
+          date: formattedDate,
+          name: newName,
           amount: balanceChange,
           yyyymm: this.csvData[i][0].substring(0,7),
           category: "",
@@ -297,11 +319,12 @@ export class UploadStatementComponent {
         };
       }
       else if(this.isTdDebitFile){
+        newName = this.csvData[i][1];
         var dateParts = this.csvData[i][0].split("/")
-        var formattedDate: string = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
+        formattedDate = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
         newEntry = {
           date: formattedDate,
-          name: this.csvData[i][1],
+          name: newName,
           amount: balanceChange,
           yyyymm: formattedDate.substring(0,7),
           category: "",
@@ -310,10 +333,13 @@ export class UploadStatementComponent {
       }
       else if(this.isRogersFile){
         //rogers files handle negative values as gains
+        balanceChange = -1 * parseFloat(this.csvData[i][12].replace("$", '').replace(",",""));
+        formattedDate = this.csvData[i][0];
+        newName = this.csvData[i][7];
         newEntry = {
           date: this.csvData[i][0],
-          name: this.csvData[i][7],
-          amount: -1 * parseFloat(this.csvData[i][12].replace("$", '').replace(",","")),
+          name: newName,
+          amount: balanceChange,
           yyyymm: this.csvData[i][0].substring(0,7),
           category: "",
           account: this.selectedAccount,
@@ -321,29 +347,97 @@ export class UploadStatementComponent {
       }
 
       
+      
+      //ExpenseSet code
+
+      newExpense.amount = balanceChange;
+      newExpense.date = formattedDate;
+
+      newExpenseName.name = newName;
+      newExpenseName.expenseList = [newExpense]
+
+      var newFirstWord = newName.split(" ")[0];
+
+      //this could be optimized to check only date amount and name by hand before making entry
+      
       //if the entry is in database, put into recognized or duplicate new entries
       //otherwise create a selectedTransactionSet
-      if(this.uniqueDbNames.includes(newEntry.name)){
+      if(this.uniqueDbNames.includes(newName)){
         var match = this.dbEntries.filter( val => {
-          return val.name == newEntry.name &&
-                  val.date == newEntry.date &&
-                  val.amount == newEntry.amount;
+          return val.name == newName &&
+                  val.date == formattedDate &&
+                  val.amount == balanceChange;
         });
-        console.log(match);
-        console.log(newEntry);
+        
         if(match.length != 0){
           this.duplicateNewEntries.push(newEntry);
+          this.duplicateExpenses.push(newExpenseName);
         }
         else{
-          newEntry.category = this.dbEntries.find(t => t.name === newEntry.name)?.category;
+          //expenseSet code
+
+          var dbTransaction = this.dbEntries.find(t => t.name === newName);
+
+          if(dbTransaction != undefined){
+            var foundCategory = dbTransaction.category;
+
+            var matchExpenseSet = this.recognizedExpenseSets.find( val => val.firstWord === newFirstWord);
+    
+            if(matchExpenseSet == undefined){
+              var newExpenseSet: ExpenseSet = expenseSetFromExpenseName(newExpenseName);
+              newExpenseSet.category = foundCategory;
+              this.recognizedExpenseSets.push(newExpenseSet);
+            }
+            else{
+              insertExpenseNameIntoExpenseSet(newExpenseName, matchExpenseSet);              
+            }
+          }
+          else{
+            console.error("Problem finding recognized transaction name for " + newName);
+          }
+
+
+
+          
+
+          //old code
+          var matchedGroup = this.recognizedNewGroups.find( val => val.name === newEntry.name);
+          if(matchedGroup != undefined){
+            // matchedGroup.totalAmount += newEntry.amount;
+          }
+          else{
+            // this.recognizedNewGroups.push({
+            //   name: newEntry.name,
+            //   totalAmount: newEntry.amount,
+            //   category: foundCategory
+            // })
+          }
+
+          newEntry.category = foundCategory;
           this.recognizedNewEntries.push(newEntry);
         }
       }
       else{
+        var matchExpenseSet = this.newExpenseSets.find( val => val.firstWord === newFirstWord);
+  
+        if(matchExpenseSet == undefined){
+          var newExpenseSet: ExpenseSet = expenseSetFromExpenseName(newExpenseName);
+          this.newExpenseSets.push(newExpenseSet);
+        }
+        else{
+          insertExpenseNameIntoExpenseSet(newExpenseName, matchExpenseSet);
+        }
+
+        //old code
+        
         this.newEntries.push(newEntry);
         this.makeTransactionSet(newEntry);
       }
     }
+
+    console.log(this.newExpenseSets);
+    console.log(this.recognizedExpenseSets);
+    console.log(this.duplicateExpenses);
     
     this.transactionSetsKeys = Object.keys(this.transactionSets)
 
@@ -361,26 +455,14 @@ export class UploadStatementComponent {
     var entryFirstWord: string = newEntry.name.split(" ")[0];
 
     if(this.transactionSets[entryFirstWord] != undefined){
-      this.transactionSets[entryFirstWord] = this.commonSubstring(this.transactionSets[entryFirstWord], newEntry.name);
+      this.transactionSets[entryFirstWord] = findCommonSubstring(this.transactionSets[entryFirstWord], newEntry.name);
     }
     else{
       this.transactionSets[entryFirstWord] = newEntry.name;
     }
   }
 
-  commonSubstring(str1: string, str2: string) {
-    let common = "";
   
-    for (let i = 1; i <= Math.min(str1.length, str2.length); i++) {
-      if (str2.startsWith(str1.substring(0, i))) {
-        common = str1.substring(0, i);
-      } else {
-        break;
-      }
-    }
-    
-    return common;
-  }
 
 
   // Table view
@@ -414,12 +496,12 @@ export class UploadStatementComponent {
 
   //this should be changed to be a dialog which looks like a modal and feeds
   //selectedTransactionSet as a parameter instead of having it global
-  splitTransactionSetModal(uniqueNewFirstWord: string): void {
+  splitTransactionSetModal(commonSubstring: string): void {
     this.selectedTransactionSet = [];
-    this.selectedTransactionSetName = uniqueNewFirstWord;
+    this.selectedTransactionSetName = commonSubstring;
 
     for(let entry of this.newEntries){
-      if(entry.name.indexOf(uniqueNewFirstWord) >= 0
+      if(entry.name.indexOf(commonSubstring) >= 0
           && !this.selectedTransactionSet.includes(entry.name)){
         this.selectedTransactionSet.push(entry.name);
       }
@@ -431,9 +513,15 @@ export class UploadStatementComponent {
   }
 
   splitTransaction(): void {
+
+    //instead of index must use the selectedtranssetname as key
+    console.log(this.selectedTransactionSetName)
+    console.log(this.transactionSets[1])
     var transactionSetIndex = this.transactionSets[1].indexOf(this.selectedTransactionSetName);
-    this.transactionSets[0].splice(transactionSetIndex,1, ...this.selectedTransactionSet);
-    this.transactionSets[1].splice(transactionSetIndex,1, ...this.selectedTransactionSet);
+    if(transactionSetIndex){
+      this.transactionSets[0].splice(transactionSetIndex,1, ...this.selectedTransactionSet);
+      this.transactionSets[1].splice(transactionSetIndex,1, ...this.selectedTransactionSet);
+    }
 
     this.selectedTransactionSet = [];
     this.selectedTransactionSetName = "";
@@ -493,6 +581,10 @@ export class UploadStatementComponent {
 
   showSubmissionModal(): void {
     if (this.fillCategories()) { //check if all categories are filled
+      this.entriesToSave = this.newEntries.concat(this.recognizedNewEntries);
+      this.entriesToSave.sort((a,b) => {
+        return a.date < b.date? -1: 1;
+      })
       const subModalElement = <HTMLElement> document.getElementById("submissionModal");
       const subModal = new Modal(subModalElement);
       subModal.show();
@@ -527,11 +619,13 @@ export class UploadStatementComponent {
   //Should send bulk and handle for loop in backend
   saveEntries(): void {
 
-    this.newEntries.sort((a,b) => {
+    this.entriesToSave = this.newEntries.concat(this.recognizedNewEntries);
+
+    this.entriesToSave.sort((a,b) => {
       return a.date < b.date? -1: 1;
     })
 
-    for(let transaction of this.newEntries){
+    for(let transaction of this.entriesToSave){
       this.transactionService.createTransaction(transaction as Transaction).subscribe();
     }
   }

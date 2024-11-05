@@ -1,8 +1,8 @@
 import { Component, Inject, Optional } from '@angular/core';
 import { MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
-import { Transaction } from '../../models/transaction.model';
 import { CommonModule } from '@angular/common';
+import { Transaction } from '../../../models/transaction.model';
 
 @Component({
   selector: 'app-submitted-transactions',
