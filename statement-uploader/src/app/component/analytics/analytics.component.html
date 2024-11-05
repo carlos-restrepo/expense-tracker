@@ -238,7 +238,7 @@
                             </div>
                           </li>
                             <li *ngFor="let category of dbCategories">
-                              <div class="dropdown-item" (click)="changeTransactionCategory(entry.name, category)">
+                              <div class="dropdown-item" (click)="changeTransactionCategory(entry.name, entry.category, category)">
                                   <label class="ps-2">{{ category }}</label>
                               </div>
                             </li>

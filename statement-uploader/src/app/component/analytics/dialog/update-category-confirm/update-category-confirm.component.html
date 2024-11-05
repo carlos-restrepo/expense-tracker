@@ -1,9 +1,17 @@
-<h2 mat-dialog-title>Are you sure?</h2>
-<mat-dialog-content>
-  <p>{{ data.name }}</p>
-  <p>{{ data.category }} -> {{ data.newCategory }}</p>
-</mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button (click)="onClose(false)">No Thanks</button>
-  <button mat-button (click)="onClose(true)">Ok</button>
-</mat-dialog-actions>
+<div class="container">
+  <h2 class="ps-3 pt-2" mat-dialog-title>Change all transactions?</h2>
+  <hr class="m-0">
+  <mat-dialog-content>
+    <div class="flex-column">
+      <div class="text-center">
+        <p>All instances of {{ data.name }} will have their category changed permanently.</p>
+        <h5>{{ data.category }} <i class="bi bi-arrow-right-circle"></i> {{ data.newCategory }}</h5>
+      </div>
+      <hr class="m-0">
+      <div class="d-flex mt-2">
+        <button class="btn btn-warning ms-auto" (click)="onClose(false)">No Thanks!</button>
+        <button class="btn btn-secondary mx-1" (click)="onClose(true)">Let's do it</button>
+      </div>
+    </div>
+  </mat-dialog-content>
+</div>

@@ -7,6 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
 import { FormsModule } from '@angular/forms';
 import { MonYearPipe } from '../../pipes/mon-year.pipe';
+import { TextInputDialogComponent } from '../../dialog/text-input-dialog/text-input-dialog.component';
 declare const CanvasJS: any;
 
 @Component({
@@ -68,6 +69,10 @@ export class AnalyticsComponent {
   ) { }
 
   ngOnInit(){
+    this.reloadAll();
+  }
+
+  reloadAll(): void {
     this.initCategories();
     setTimeout(() => {
       this.initAccounts();
@@ -102,6 +107,12 @@ export class AnalyticsComponent {
   }
 
   initCategories(): void {
+    this.dbCategories = [];
+    this.blacklistCategories = [];
+    this.blacklistMonthCategories = [];
+    this.filterCategories = [];
+    this.filterMonthCategories = [];
+
     this.transactionService.getCategories().subscribe(
       (categories) => {
         this.dbCategories = this.dbCategories.concat(categories);
@@ -488,28 +499,17 @@ export class AnalyticsComponent {
   }
 
   createCategoryButton(transaction: Transaction):void {
-    alert('test')
-    const dialogRef = this.dialog.open(NewCategoryComponent,{
-      width: "400px",
-      height: "300px",
+    const dialogRef = this.dialog.open(TextInputDialogComponent, {
+      data: {
+        title: "Create New Category",
+        label: "Category"
+      }
     });
 
     dialogRef.afterClosed().subscribe(
       newCategory => {
         if(newCategory != undefined){
-          const confirmDialogRef = this.dialog.open(UpdateCategoryConfirmComponent,{
-            data: {
-              name: transaction.name,
-              category: transaction.category,
-              newCategory: newCategory
-            }
-          });
-
-          confirmDialogRef.afterClosed().subscribe(result => {
-            if(result){
-              this.changeTransactionCategory(transaction.name, newCategory);
-            }
-          })
+          this.changeTransactionCategory(transaction.name, transaction.category, newCategory);
         }
         else{
           alert("Canceled by invalid category");
@@ -517,19 +517,36 @@ export class AnalyticsComponent {
       });
   }
 
-  changeTransactionCategory(name: string, newCategory: string): void {
-
-    var transactionNameList = this.dbTransactions.filter(val => val.name === name);
-
-    for(let transaction of transactionNameList){
-      transaction.category = newCategory;
-
-      if(transaction){
-        this.transactionService.updateTransactionNameCategory(transaction).subscribe();
+  changeTransactionCategory(name: string, category: string, newCategory: string): void {
+          
+    const confirmDialogRef = this.dialog.open(UpdateCategoryConfirmComponent,{
+      data: {
+        name: name,
+        category: category,
+        newCategory: newCategory
       }
-    }
+    });
 
-    this.updateMonth();
+
+    confirmDialogRef.afterClosed().subscribe(result => {
+      if(result){
+        var transactionNameList = this.dbTransactions.filter(val => val.name === name);
+    
+        for(let transaction of transactionNameList){
+          transaction.category = newCategory;
+    
+          if(transaction){
+            this.transactionService.updateTransactionNameCategory(transaction).subscribe(
+              
+            );
+          }
+        }
+        setTimeout(() => {
+          this.reloadAll();
+          this.updateMonth();
+        }, 100);
+      }
+    });
   }
 
   toggleMonthCategoryFilter(category: string): void {
@@ -577,7 +594,6 @@ export class AnalyticsComponent {
       this.blacklistMonthCategories.push(category);
     }
 
-    this.updateFilteredDbTransactions();
     this.updateMonth();
   }
 

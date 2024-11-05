@@ -1,18 +1,20 @@
-<h2 class="ps-3 pt-2" mat-dialog-title>Create Category</h2>
-<hr class="m-0">
-<mat-dialog-content>
-    <form action="">
-        <div  class="flex-column mx-auto my-auto">
-            <div>
-                <h4>Enter your new category:</h4>
-            </div>
-            <div>
-                <input class="form-control" type="text" placeholder="New category" [(ngModel)] = "newCategory" name="newCategory">
-            </div>
-            <hr>
-            <div class="d-flex">
-                <button class="btn btn-warning ms-auto" type="submit" (click)="emitCategory()">Submit</button>
-            </div>
-        </div>    
-    </form>
-</mat-dialog-content>
+<div class="container">
+    <h2 class="ps-3 pt-2" mat-dialog-title>Create Category</h2>
+    <hr class="m-0">
+    <mat-dialog-content>
+        <form action="">
+            <div  class="flex-column mx-auto my-auto">
+                <div>
+                    <h4>Enter your new category:</h4>
+                </div>
+                <div>
+                    <input class="form-control" type="text" placeholder="New category" [(ngModel)] = "newCategory" name="newCategory">
+                </div>
+                <hr class="m-0">
+                <div class="d-flex mt-2">
+                    <button class="btn btn-warning ms-auto me-1" type="submit" (click)="emitCategory()">Submit</button>
+                </div>
+            </div>    
+        </form>
+    </mat-dialog-content>
+</div>
