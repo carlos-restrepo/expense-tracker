@@ -5,7 +5,7 @@ import { ExpenseName } from '../../models/expense-set/expense-set.model';
 import { SubmittedTransactionsComponent } from '../../component/upload-statement/submitted-transactions/submitted-transactions.component';
 
 @Component({
-  selector: 'app-check-row-table',
+  selector: 'app-identify-columns-dialog',
   standalone: true,
   imports: [
     MatDialogContent,
@@ -13,17 +13,22 @@ import { SubmittedTransactionsComponent } from '../../component/upload-statement
     MatDialogClose,
     CommonModule,
   ],
-  templateUrl: './check-row-table.component.html',
-  styleUrl: './check-row-table.component.css'
+  templateUrl: './identify-columns-dialog.component.html',
+  styleUrl: './identify-columns-dialog.component.css'
 })
-export class CheckRowTableComponent {
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public expenseNameList: ExpenseName[],
-    @Optional() public dialogRef: MatDialogRef<SubmittedTransactionsComponent>,
-  ) { }
+export class IdentifyColumnsDialogComponent {
 
-  onDuplicateRowClick(duplicateName: string): void {
-    const rowCheckboxElement = (document.getElementById(duplicateName) as HTMLInputElement);
+  rowLength: number;
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public csvRows: any[],
+    @Optional() public dialogRef: MatDialogRef<SubmittedTransactionsComponent>,
+  ) {
+    this.rowLength = csvRows[0].length;
+  }
+
+  onDuplicateRowClick(index: number): void {
+    const rowCheckboxElement = (document.getElementById(index.toString()) as HTMLInputElement);
     if(rowCheckboxElement){
       rowCheckboxElement.checked = !rowCheckboxElement.checked;
     }

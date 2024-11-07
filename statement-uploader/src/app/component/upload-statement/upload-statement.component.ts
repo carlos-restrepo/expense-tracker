@@ -14,6 +14,8 @@ import { errorClipboardViewContainerRequired } from 'ngx-markdown';
 import { emptyExpense, emptyExpenseName, emptyExpenseSet, Expense, ExpenseName, ExpenseSet, expenseSetFromExpenseName, expenseSetToTransactionList, findCommonSubstring, insertExpenseNameIntoExpenseSet } from '../../models/expense-set/expense-set.model';
 import { DialogRef } from '@angular/cdk/dialog';
 import { TextInputDialogComponent } from '../../dialog/text-input-dialog/text-input-dialog.component';
+import { CheckRowTableComponent } from '../../dialog/check-row-table/check-row-table.component';
+import { IdentifyColumnsDialogComponent } from '../../dialog/identify-columns-dialog/identify-columns-dialog.component';
 
 
 
@@ -221,7 +223,7 @@ export class UploadStatementComponent {
 
   //START Process File Flow
 
-  readCsv(): void{
+  readCsv(): void {
     // Use FileReader to read the file into csvData
     this.csvData = [];
     var fileHeadings: boolean = false;
@@ -236,6 +238,7 @@ export class UploadStatementComponent {
       Papa.parse(csvText, {
         complete: (result) => {
           this.csvData = result.data;
+          this.identifyColumnsDialog();
           this.makeNewEntries();
           this.fileProcessed = true;
         },
@@ -253,6 +256,12 @@ export class UploadStatementComponent {
         tableElement.scrollIntoView({block: 'start', behavior:'smooth'});
       }
     }, 100);
+  }
+
+  identifyColumnsDialog(): void {
+    this.dialog.open(IdentifyColumnsDialogComponent, {
+      data: this.csvData
+    });
   }
   
   makeNewEntries(): void{
@@ -385,7 +394,7 @@ export class UploadStatementComponent {
 
   }
 
-  // Table view
+  /* Table view */
 
   //this should be changed to be a dialog which looks like a modal and feeds
   //selectedSetToSplitNames as a parameter instead of having it global

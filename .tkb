@@ -1,0 +1,103 @@
+{
+  "scope": "Workspace",
+  "tasks": {
+    "task-UyaccaMyUtpzFU2aALIEG": {
+      "id": "task-UyaccaMyUtpzFU2aALIEG",
+      "description": "### As a user I want duplicates to be eliminated for me when I upload a file",
+      "columnId": "column-done"
+    },
+    "_ftqYhiTZyff53FkCl2qP": {
+      "id": "_ftqYhiTZyff53FkCl2qP",
+      "description": "### As a user I want to see the recognized transaction names grouped by total and be uploaded",
+      "columnId": "column-done"
+    },
+    "EutxvQQDCL4CorY1N8MFl": {
+      "id": "EutxvQQDCL4CorY1N8MFl",
+      "description": "### As a user I want to export my account so that I can resume using the application later",
+      "columnId": "column-todo"
+    },
+    "QxFytwzkvzfnrTSHQRXrz": {
+      "id": "QxFytwzkvzfnrTSHQRXrz",
+      "description": "### Fix \"Are you sure\" category change dialog and attach it to standard category changes",
+      "columnId": "column-done"
+    },
+    "geULUhQFegUy9sjd4YTIt": {
+      "id": "geULUhQFegUy9sjd4YTIt",
+      "description": "### Create a separate component for the month table",
+      "columnId": "column-doing"
+    },
+    "d9sJjPu4lsC6Uq5stftep": {
+      "id": "d9sJjPu4lsC6Uq5stftep",
+      "description": "### Filtering by category breaks the month bar chart and table",
+      "columnId": "column-done"
+    },
+    "wKqrIrkZO8iZaE67Ks8-G": {
+      "id": "wKqrIrkZO8iZaE67Ks8-G",
+      "description": "### As a user I want to identify the name, amount and date columns, so that I can upload any banks csv or my own xls",
+      "columnId": "column-doing"
+    },
+    "CUEvYhGnFnNHhIiUb4tE3": {
+      "id": "CUEvYhGnFnNHhIiUb4tE3",
+      "description": "### Delete new and recognized transactions.\n\n#### When the trashcan is clicked, a table with the appropriate transaction comes up and allows deleting all or deleting selected",
+      "columnId": "column-todo"
+    },
+    "i9-T6qeWosVOhd1TLLk9H": {
+      "id": "i9-T6qeWosVOhd1TLLk9H",
+      "description": "### implement Expense interface hierarchy",
+      "columnId": "column-done"
+    },
+    "hk3qFFfqPyjM9Q1DJs0Rv": {
+      "id": "hk3qFFfqPyjM9Q1DJs0Rv",
+      "description": "### Transaction set splitting shows the wrong values",
+      "columnId": "column-done"
+    },
+    "7VMMFw2U5gRl_boK9tGmK": {
+      "id": "7VMMFw2U5gRl_boK9tGmK",
+      "description": "Changing category of transaction changes the month",
+      "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
+    },
+    "uS8BPp5E0H9JFyQ4uFWyM": {
+      "id": "uS8BPp5E0H9JFyQ4uFWyM",
+      "description": "",
+      "columnId": "column-todo"
+    }
+  },
+  "columns": [
+    {
+      "id": "column-YDVEnCLwvv5DaLjitT7KM",
+      "title": "Bugs",
+      "tasksIds": [
+        "7VMMFw2U5gRl_boK9tGmK"
+      ]
+    },
+    {
+      "id": "column-todo",
+      "title": "To do",
+      "tasksIds": [
+        "EutxvQQDCL4CorY1N8MFl",
+        "CUEvYhGnFnNHhIiUb4tE3",
+        "uS8BPp5E0H9JFyQ4uFWyM"
+      ]
+    },
+    {
+      "id": "column-doing",
+      "title": "Doing",
+      "tasksIds": [
+        "wKqrIrkZO8iZaE67Ks8-G",
+        "geULUhQFegUy9sjd4YTIt"
+      ]
+    },
+    {
+      "id": "column-done",
+      "title": "Done",
+      "tasksIds": [
+        "QxFytwzkvzfnrTSHQRXrz",
+        "d9sJjPu4lsC6Uq5stftep",
+        "i9-T6qeWosVOhd1TLLk9H",
+        "hk3qFFfqPyjM9Q1DJs0Rv",
+        "task-UyaccaMyUtpzFU2aALIEG",
+        "_ftqYhiTZyff53FkCl2qP"
+      ]
+    }
+  ]
+}

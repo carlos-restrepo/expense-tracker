@@ -1,5 +1,5 @@
 package com.example.demo.constants;
 
 public class TableConstant {
-    public final static String NAME = "demo";
+    public final static String NAME = "transactions";
 }

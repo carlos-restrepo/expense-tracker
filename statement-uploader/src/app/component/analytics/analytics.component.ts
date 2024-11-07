@@ -190,9 +190,13 @@ export class AnalyticsComponent {
   getMonthTotals(): void {
     this.monthTotals = [];
     for(let month of this.selectedYyyymm){
-      var monthAmounts: number[] = this.filteredDbTransactions.filter( (val, i, arr) => {
+      var monthAmounts: number[] = this.filteredDbTransactions.filter( val => {
         return val.yyyymm === month;
       }).map(e => e.amount)
+
+
+      console.log(monthAmounts);
+
 
       var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
         return acc + curr;
@@ -200,6 +204,7 @@ export class AnalyticsComponent {
 
       this.monthTotals.push(monthTotal);
     }
+    console.log(this.monthTotals);
   }
 
   updateMonth(){
@@ -327,9 +332,11 @@ export class AnalyticsComponent {
     monthDataPoints = monthDataPoints.filter(v => v.y > 0);
     monthDataPoints.sort((a,b) => a.y - b.y); //sort and cut off top 5
     monthDataPoints = monthDataPoints.slice(-5);
+    var monthDataPointsTop2 = monthDataPoints.slice(-2);
 
-    // monthDataPoints[monthDataPoints.length - 1].color = '#c8930d'
-    // monthDataPoints[monthDataPoints.length - 2].color = '#c8930d'
+    for(let i = 0; i < monthDataPointsTop2.length; i++){
+      monthDataPointsTop2[i].color = '#c8930d'
+    }
     
     this.monthChart.options.data[0].dataPoints = monthDataPoints;
     this.monthChart.render();
@@ -348,8 +355,17 @@ export class AnalyticsComponent {
       });
     }
 
-
     this.monthTable.sort((a,b) => a.amount - b.amount);
+
+    
+
+    var acc = 0;
+    for(let entry of this.monthTable){
+      acc+=entry.amount;
+      console.log(entry.name, acc, entry.category);
+      
+    }
+
     this.monthTable = this.monthTable.filter( val => {
       return this.filterMonthCategories.includes(val.category);
     });
