@@ -32,7 +32,7 @@ export class AnalyticsComponent {
   blacklistCategories: string[] = [];
   filterCategories: string[] = [];
 
-  BLACKLIST_MONTH_DEFAULT: string[] = ["Internal", "Transfers","Mortgage"];
+  BLACKLIST_MONTH_DEFAULT: string[] = ["Internal", "Transfers"];
   blacklistMonthCategories: string[] = [];
   filterMonthCategories: string[] = [];
 
@@ -59,12 +59,14 @@ export class AnalyticsComponent {
   periodChangeTotal: number = 0;
   averageMonthlyTotal: number = 0;
 
+  init: boolean = true;
+
 
   // Initializers
   
   constructor(
     private transactionService: TransactionService,
-    // private monYearPipe: MonYearPipe,
+    private monYearPipe: MonYearPipe,
     private dialog: MatDialog,
   ) { }
 
@@ -119,8 +121,11 @@ export class AnalyticsComponent {
         this.blacklistCategories = this.blacklistCategories.concat(categories);
         this.blacklistMonthCategories = this.blacklistMonthCategories.concat(categories);
 
-        this.initBlacklistDefault();
-        this.initBlacklistMonthDefault();
+        if(this.init){
+          this.initBlacklistDefault();
+          this.initBlacklistMonthDefault();
+          this.init = false;
+        }
         
         this.filterCategories = this.filterCategories.concat(categories);
         this.filterMonthCategories = this.filterMonthCategories.concat(categories);
@@ -194,17 +199,12 @@ export class AnalyticsComponent {
         return val.yyyymm === month;
       }).map(e => e.amount)
 
-
-      console.log(monthAmounts);
-
-
       var monthTotal: number = +monthAmounts.reduce( (acc, curr) => {
         return acc + curr;
       }, 0).toFixed(0);
 
       this.monthTotals.push(monthTotal);
     }
-    console.log(this.monthTotals);
   }
 
   updateMonth(){
@@ -245,22 +245,20 @@ export class AnalyticsComponent {
       );
 
       monthlyTotals.push({
-        // label: this.monYearPipe.transform(month), 
-        label: month,
+        label: this.monYearPipe.transform(month), 
         y: monthTotal,
         indexLabelFormatter: (e:any) => {
           return e.dataPoint.y < 0? "\u2800-$" + (-1*e.dataPoint.y) + "\u2800" : "\u2800$" + e.dataPoint.y + "\u2800"
         },
         indexLabelBorderColor: "#333333",
         indexLabelBorderThickness: 0.5,
-        indexLabelFontSize: 15,
+        indexLabelFontSize: 20,
         indexLabelFontColor: "#000000",
         indexLabelBackgroundColor: "#f9e3a7"
       });
 
       zeroLine.push({
-        // label: this.monYearPipe.transform(month),
-        label: month,
+        label: this.monYearPipe.transform(month),
         y: 0,
         markerSize: 0,
       })
@@ -356,16 +354,6 @@ export class AnalyticsComponent {
     }
 
     this.monthTable.sort((a,b) => a.amount - b.amount);
-
-    
-
-    var acc = 0;
-    for(let entry of this.monthTable){
-      acc+=entry.amount;
-      console.log(entry.name, acc, entry.category);
-      
-    }
-
     this.monthTable = this.monthTable.filter( val => {
       return this.filterMonthCategories.includes(val.category);
     });

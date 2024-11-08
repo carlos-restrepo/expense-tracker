@@ -6,6 +6,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideMarkdown } from 'ngx-markdown';
 import { KatexModule } from 'ng-katex';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,6 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(), 
     provideHttpClient(),
     provideMarkdown(),
+    provideAnimations(),
     KatexModule
   ],
 };

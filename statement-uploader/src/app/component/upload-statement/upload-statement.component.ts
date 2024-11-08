@@ -1,10 +1,11 @@
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import {} from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, } from '@angular/forms';
 import { TransactionService } from '../../services/transaction.service';
 import { DebitService } from '../../services/debit.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { NewCategoryComponent } from '../../dialog/new-category/new-category.component';
 import { emptyTransaction, Transaction } from '../../models/transaction.model';
 import * as Papa from 'papaparse';
@@ -32,6 +33,7 @@ import { IdentifyColumnsDialogComponent } from '../../dialog/identify-columns-di
 })
 export class UploadStatementComponent {
 
+  private _snackBar = inject(MatSnackBar);
   
   fileForm!: FormGroup;
 
@@ -163,13 +165,28 @@ export class UploadStatementComponent {
     }
   }
 
-  //Process Flow
-  //User uploads file, triggering: onFileUpload -> loadEntries -> findUniqueDbNames
-  //User clicks Process File, triggering: readCsv -> makeEntries
-  //User clicks Submit, triggering: submitStatement -> fillCategores,saveEntries
+  /**
+   * Process Flow
+   * User uploads file, triggering: onFileUpload -> loadEntries -> findUniqueDbNames
+   * User clicks Process File, triggering: readCsv -> makeEntries
+   * User clicks Submit, triggering: submitStatement -> fillCategores,saveEntries
+   */
+
+  /**
+   * 
+   * GPT Recommendation Panel
+   */
+
+  chatgptSnackbar(): void {
+    this._snackBar.open(
+      'You can take a screenshot of your statement then visit chatgpt.com and paste the screenshot along with the message:\n Please turn this into an excel file with columns "Date", "Amount", "Gain", "Loss". Thank you!',
+      'Thanks!'
+    );
+  }
 
 
-  //START File Upload Flow
+
+  //START File Upload Panel 
   onFileSelected(event: any): void {
     this.csvData = [];
 
@@ -206,7 +223,6 @@ export class UploadStatementComponent {
     this.loadEntries();
   }
 
-  //make this into a dialog, could be merged with category dialog?  
   newAccountButton(): void {
 
     const dialogRef = this.dialog.open(TextInputDialogComponent, {
@@ -221,7 +237,10 @@ export class UploadStatementComponent {
     });
   }
 
-  //START Process File Flow
+  /**
+   * Create Table
+   * START Process File Flow
+   */
 
   readCsv(): void {
     // Use FileReader to read the file into csvData

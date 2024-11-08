@@ -1,7 +1,17 @@
 
 <div class="border rounded shadow px-5 pb-5 pt-2 min-vh-75 bg-med-yellow">
     <div class="row bg-off-white justify-content-center align-items-center p-3 my-3
-            border shadow rounded-pill">
+                    border shadow rounded-pill">
+            <div class="col-12 flex-column my-3 text-center justify-content-center">
+                <h5>
+                    ¿¿Did you know you can use chatgpt to turn your online bank transactions into an excel file?!!
+                </h5>
+                <button class="btn btn-warning" (click)="chatgptSnackbar()">
+                    <i class="fa-light fa-magnifying-glass-dollar"></i>
+                    Find out how!
+                    <i class="fa-light fa-magnifying-glass-dollar"></i>
+                </button>
+            </div>
         <div class="col-6">            
             <form class="form-container" [formGroup]="fileForm">
                 <input class="form-control" 
