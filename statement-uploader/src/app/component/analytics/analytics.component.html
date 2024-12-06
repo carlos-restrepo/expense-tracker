@@ -110,7 +110,8 @@
                   (change)="updateMonth()"
                   [(ngModel)]="selectedMonth"
                   id="yyyymmSelect">
-            <option *ngFor="let yyyymm of selectedYyyymm.reverse()" value="{{yyyymm}}">{{yyyymm | monYear }}</option>
+                  <!-- | monYear  -->
+            <option *ngFor="let yyyymm of selectedYyyymm.reverse()" value="{{yyyymm}}">{{yyyymm }}</option>
           </select>
         </div>
       </div>
@@ -120,7 +121,8 @@
     <div class="col-4 d-flex align-items-center justify-content-center">
       <div class="d-flex border bg-light rounded shadow py-3 w-100 h-100 align-items-center justify-content-center">
         <h2 class="text-center">
-          {{ selectedMonth | monYear }}
+          <!-- | monYear -->
+          {{ selectedMonth  }}
         </h2>
       </div>
     </div>

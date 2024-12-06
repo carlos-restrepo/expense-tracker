@@ -13,8 +13,8 @@
     },
     "EutxvQQDCL4CorY1N8MFl": {
       "id": "EutxvQQDCL4CorY1N8MFl",
-      "description": "### As a user I want to export my account so that I can resume using the application later",
-      "columnId": "column-todo"
+      "description": "### As a user I want to export my account so that I can resume using the application later\n\n* must refactor so that database is loaded from header component instead of in analytics",
+      "columnId": "column-doing"
     },
     "QxFytwzkvzfnrTSHQRXrz": {
       "id": "QxFytwzkvzfnrTSHQRXrz",
@@ -24,7 +24,7 @@
     "geULUhQFegUy9sjd4YTIt": {
       "id": "geULUhQFegUy9sjd4YTIt",
       "description": "### Create a separate component for the month table",
-      "columnId": "column-doing"
+      "columnId": "column-todo"
     },
     "d9sJjPu4lsC6Uq5stftep": {
       "id": "d9sJjPu4lsC6Uq5stftep",
@@ -34,12 +34,12 @@
     "wKqrIrkZO8iZaE67Ks8-G": {
       "id": "wKqrIrkZO8iZaE67Ks8-G",
       "description": "### As a user I want to identify the name, amount and date columns, so that I can upload any banks csv or my own xls",
-      "columnId": "column-doing"
+      "columnId": "column-done"
     },
     "CUEvYhGnFnNHhIiUb4tE3": {
       "id": "CUEvYhGnFnNHhIiUb4tE3",
       "description": "### Delete new and recognized transactions.\n\n#### When the trashcan is clicked, a table with the appropriate transaction comes up and allows deleting all or deleting selected",
-      "columnId": "column-todo"
+      "columnId": "column-done"
     },
     "i9-T6qeWosVOhd1TLLk9H": {
       "id": "i9-T6qeWosVOhd1TLLk9H",
@@ -56,10 +56,65 @@
       "description": "Changing category of transaction changes the month",
       "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
     },
-    "uS8BPp5E0H9JFyQ4uFWyM": {
-      "id": "uS8BPp5E0H9JFyQ4uFWyM",
-      "description": "",
+    "-INZQOV6rsxF5-seMn_gy": {
+      "id": "-INZQOV6rsxF5-seMn_gy",
+      "description": "Upload transactions - New Category select should not get selected unless it is clicked ",
+      "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
+    },
+    "R60-xtcw6-uDVdsLWOCZq": {
+      "id": "R60-xtcw6-uDVdsLWOCZq",
+      "description": "Check marks should get selected when the actual check is clicked",
+      "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
+    },
+    "8N65-vLPE0pvSPOySBiqG": {
+      "id": "8N65-vLPE0pvSPOySBiqG",
+      "description": "### Recommend to users to use chatgpt to turns their statements into csvs themselves",
+      "columnId": "column-done"
+    },
+    "X8KALkYcpgstIAE1324FD": {
+      "id": "X8KALkYcpgstIAE1324FD",
+      "description": "Upload trans - Duplicates and row identification come up at the same time",
+      "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
+    },
+    "pS2wlNXuL4OnQZgW7FS5C": {
+      "id": "pS2wlNXuL4OnQZgW7FS5C",
+      "description": "Upload trans - Empty accounts allowed",
+      "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
+    },
+    "1sT4-P6lFd4yRk5IhJU1K": {
+      "id": "1sT4-P6lFd4yRk5IhJU1K",
+      "description": "### Upload trans - Handle files with headers",
+      "columnId": "column-doing"
+    },
+    "7PX7mhuufCk3pzMUfG45X": {
+      "id": "7PX7mhuufCk3pzMUfG45X",
+      "description": "### As a user I want to be directed to analytics when I upload a file so that I can immediately see what I uploaded",
       "columnId": "column-todo"
+    },
+    "paX-rKZdD_OZrG0g94UMW": {
+      "id": "paX-rKZdD_OZrG0g94UMW",
+      "description": "### Refactor analytics to use expense sets instead of transactions",
+      "columnId": "column-todo"
+    },
+    "pmBL30pXNKTLzaM-vkgS0": {
+      "id": "pmBL30pXNKTLzaM-vkgS0",
+      "description": "### Add functionality to timeline dropdown or hide dropdown",
+      "columnId": "column-todo"
+    },
+    "HunYnoDNwGesmt-sXaWNj": {
+      "id": "HunYnoDNwGesmt-sXaWNj",
+      "description": "### Auto detect relevant columns in statement`",
+      "columnId": "column-doing"
+    },
+    "WRTh7RDeIdeD0SC9z0H8n": {
+      "id": "WRTh7RDeIdeD0SC9z0H8n",
+      "description": "### Month table sorting",
+      "columnId": "column-todo"
+    },
+    "Fh_sCFGT5pfBY-iiegm3Z": {
+      "id": "Fh_sCFGT5pfBY-iiegm3Z",
+      "description": "Month table - ikea etobicoke total is wrong",
+      "columnId": "column-YDVEnCLwvv5DaLjitT7KM"
     }
   },
   "columns": [
@@ -67,30 +122,41 @@
       "id": "column-YDVEnCLwvv5DaLjitT7KM",
       "title": "Bugs",
       "tasksIds": [
-        "7VMMFw2U5gRl_boK9tGmK"
+        "7VMMFw2U5gRl_boK9tGmK",
+        "-INZQOV6rsxF5-seMn_gy",
+        "R60-xtcw6-uDVdsLWOCZq",
+        "X8KALkYcpgstIAE1324FD",
+        "pS2wlNXuL4OnQZgW7FS5C",
+        "Fh_sCFGT5pfBY-iiegm3Z"
       ]
     },
     {
       "id": "column-todo",
       "title": "To do",
       "tasksIds": [
-        "EutxvQQDCL4CorY1N8MFl",
-        "CUEvYhGnFnNHhIiUb4tE3",
-        "uS8BPp5E0H9JFyQ4uFWyM"
+        "7PX7mhuufCk3pzMUfG45X",
+        "paX-rKZdD_OZrG0g94UMW",
+        "pmBL30pXNKTLzaM-vkgS0",
+        "geULUhQFegUy9sjd4YTIt",
+        "WRTh7RDeIdeD0SC9z0H8n"
       ]
     },
     {
       "id": "column-doing",
       "title": "Doing",
       "tasksIds": [
-        "wKqrIrkZO8iZaE67Ks8-G",
-        "geULUhQFegUy9sjd4YTIt"
+        "1sT4-P6lFd4yRk5IhJU1K",
+        "EutxvQQDCL4CorY1N8MFl",
+        "HunYnoDNwGesmt-sXaWNj"
       ]
     },
     {
       "id": "column-done",
       "title": "Done",
       "tasksIds": [
+        "CUEvYhGnFnNHhIiUb4tE3",
+        "wKqrIrkZO8iZaE67Ks8-G",
+        "8N65-vLPE0pvSPOySBiqG",
         "QxFytwzkvzfnrTSHQRXrz",
         "d9sJjPu4lsC6Uq5stftep",
         "i9-T6qeWosVOhd1TLLk9H",

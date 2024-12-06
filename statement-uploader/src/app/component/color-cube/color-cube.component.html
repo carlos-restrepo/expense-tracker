@@ -1,0 +1,40 @@
+<div class="controls">
+    <label for="blue">Blue Value (0-255): </label>
+    <input
+      id="blue"
+      type="number"
+      min="0"
+      max="255"
+      [(ngModel)]="blueValue"
+      (input)="onBlueChange($event.target)"
+    />
+  </div>
+  <div
+    class="color-square"
+    [ngStyle]="{
+      background: 'linear-gradient(to top, rgba(0, 255, ' + blueValue + ', 0) 0%, rgba(0, 255, ' + blueValue + ', 1) 100%), linear-gradient(to right, rgba(255, 0, ' + blueValue + ', 0) 0%, rgba(255, 0, ' + blueValue + ', 1) 100%)'
+    }"
+  ></div>
+
+  <!-- @for(i of twoFiftySix; let){
+    @for(j of twoFiftySix; track j){
+      <div class="color-square"
+        [ngStyle]="{
+          background: 'rgb(' + i + ', ' + j + ', ' + blueValue + ')'
+        }">
+      </div>
+    }
+  } -->
+
+  <div class="d-flex" *ngFor="let i of twoFiftySix; let iIndex = index">
+    <div *ngFor="let j of twoFiftySix; let jIndex = index"
+      class="color-square"
+      [ngStyle]="{
+        background: 'rgb(' + iIndex + ', ' + jIndex + ', ' + blueValue + ')'
+      }"
+    ></div>
+  </div>
+
+  <!-- , linear-gradient(to top, rgba(255, 0, ' + blueValue + ', 1) 0%, rgba(255, 255, ' + blueValue + ', 1) 100%) -->
+  <!-- linear-gradient(to right, rgba(0, 255, ' + blueValue + ', 1) 0%, rgba(255, 255, ' + blueValue + ', 1) 100%) -->
+  

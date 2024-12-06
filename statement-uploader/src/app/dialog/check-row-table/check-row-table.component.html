@@ -1,5 +1,5 @@
 <div class="m-3">
-    <h2 class="ps-3 pt-2" mat-dialog-title>Deleting Duplicate Transactions!</h2>
+    <h2 class="ps-3 pt-2" mat-dialog-title>{{ action }} Transactions!</h2>
     <hr class="m-0">
     <mat-dialog-content>
         <div  class="flex-column mx-auto my-auto">
@@ -7,7 +7,7 @@
             <table class="table table-striped table-light">
                 <thead>
                     <tr>
-                        <!-- <th></th> -->
+                        <th></th>
                         <th>Date</th>
                         <th>Transaction Name</th>
                         <th>Amount</th>
@@ -15,25 +15,28 @@
                 </thead>
                 <tbody>
                     <!-- (click)="onDuplicateRowClick(entry.name)"  -->
-                    <tr (click)="onDuplicateRowClick(expenseName.name)" *ngFor="let expenseName of expenseNameList">
-                        <td>
-                            <input class="form-check-input" (click)="onDuplicateRowClick(expenseName.name)" type="checkbox" id="{{expenseName.name}}">
-                        </td>
-                        <!-- Date -->
-                        <td>{{ expenseName.expenseList[0].date }}</td>
-                        <!-- Transaction Name -->
-                        <td>{{ expenseName.name }}</td>
-                        <!-- Amount -->
-                        <td>
-                            {{ expenseName.expenseList[0].amount }}
-                        </td>
-                    </tr>
+                     @for(expenseName of expenseNameList; track expenseName){
+                        <tr (click)="onDuplicateRowClick(expenseName, expenseIndex)" *ngFor="let expense of expenseName.expenseList; let expenseIndex = index">
+                            <td>
+                                <input class="form-check-input" (click)="onDuplicateRowClick(expenseName, expenseIndex)" type="checkbox" id="{{expenseName.name +  expenseIndex}}">
+                            </td>
+                            <!-- Date -->
+                            <td>{{ expense.date }}</td>
+                            <!-- Transaction Name -->
+                            <td>{{ expenseName.name }}</td>
+                            <!-- Amount -->
+                            <td>
+                                {{ expense.amount }}
+                            </td>
+                        </tr>
+                     }
                 </tbody>
             </table>
         </div>   
     </mat-dialog-content>
     <mat-dialog-actions>
-        <button mat-dialog-close class="btn btn-secondary ms-auto">Keep selected (not functional)</button>
-        <button mat-dialog-close class="btn btn-warning mx-1">Please, thanks!</button>
+        <button mat-dialog-close class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+        <button mat-dialog-close class="btn btn-secondary ms-auto" (click)="onSelected()">{{ action }} selected</button>
+        <button mat-dialog-close class="btn btn-warning mx-1" (click)="onAll()">{{ action }} all</button>
     </mat-dialog-actions>
 </div>

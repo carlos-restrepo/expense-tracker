@@ -12,11 +12,12 @@ import * as Papa from 'papaparse';
 import { Modal } from 'bootstrap';
 import { SubmittedTransactionsComponent } from './submitted-transactions/submitted-transactions.component';
 import { errorClipboardViewContainerRequired } from 'ngx-markdown';
-import { emptyExpense, emptyExpenseName, emptyExpenseSet, Expense, ExpenseName, ExpenseSet, expenseSetFromExpenseName, expenseSetToTransactionList, findCommonSubstring, insertExpenseNameIntoExpenseSet } from '../../models/expense-set/expense-set.model';
+import { emptyExpense, emptyExpenseName, emptyExpenseSet, Expense, ExpenseName, ExpenseSet, expenseSetFromExpenseName, expenseSetToTransactionList, findCommonSubstring, insertExpenseNameIntoExpenseSet, recalculateSetTotalAmount } from '../../models/expense-set/expense-set.model';
 import { DialogRef } from '@angular/cdk/dialog';
 import { TextInputDialogComponent } from '../../dialog/text-input-dialog/text-input-dialog.component';
 import { CheckRowTableComponent } from '../../dialog/check-row-table/check-row-table.component';
 import { IdentifyColumnsDialogComponent } from '../../dialog/identify-columns-dialog/identify-columns-dialog.component';
+import {MatTooltipModule} from '@angular/material/tooltip';
 
 
 
@@ -27,6 +28,7 @@ import { IdentifyColumnsDialogComponent } from '../../dialog/identify-columns-di
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    MatTooltipModule,
   ],
   templateUrl: './upload-statement.component.html',
   styleUrl: './upload-statement.component.css'
@@ -108,7 +110,7 @@ export class UploadStatementComponent {
         ]
       ],
       accountSelect: [
-        null,
+        "Select an account",
         [
           Validators.required
         ]
@@ -150,6 +152,8 @@ export class UploadStatementComponent {
       (trans: Transaction[]) => {
         this.dbEntries = trans;
         this.findUniqueDbNames();
+        console.log('database', this.dbEntries);
+        console.log('uniquenames',this.uniqueDbNames);
       }
     );
   }
@@ -179,7 +183,7 @@ export class UploadStatementComponent {
 
   chatgptSnackbar(): void {
     this._snackBar.open(
-      'You can take a screenshot of your statement then visit chatgpt.com and paste the screenshot along with the message:\n Please turn this into an excel file with columns "Date", "Amount", "Gain", "Loss". Thank you!',
+      'You can take a screenshot of your statement then visit chatgpt.com and paste the screenshot along with the message:\n\nPlease turn this picture I\'m going to send you into a csv file with columns "Date", "Amount", "Gain", "Loss". Thank you!\n\nMake sure you don\'t include personal information!',
       'Thanks!'
     );
   }
@@ -216,9 +220,6 @@ export class UploadStatementComponent {
               && fileName.indexOf("History") > -1){
         this.isRogersFile = true;
       }
-      else{
-        alert("File account not recognized");
-      }
     }
     this.loadEntries();
   }
@@ -245,7 +246,7 @@ export class UploadStatementComponent {
   readCsv(): void {
     // Use FileReader to read the file into csvData
     this.csvData = [];
-    var fileHeadings: boolean = false;
+    this.fileProcessed = false;
 
     const reader = new FileReader();
     reader.readAsText(this.file);
@@ -257,9 +258,31 @@ export class UploadStatementComponent {
       Papa.parse(csvText, {
         complete: (result) => {
           this.csvData = result.data;
-          this.identifyColumnsDialog();
-          this.makeNewEntries();
-          this.fileProcessed = true;
+
+          //Remove headers if they exist
+          //Headers are presumed to all have letters in them
+          var hasHeaders = false;
+
+          for(let entry of this.csvData[0]){
+            hasHeaders = hasHeaders && /[a-zA-Z]/.test(entry);
+          }
+
+          if(hasHeaders){
+            this.csvData.splice(0,1);
+          }
+
+
+
+          var dialogRef: MatDialogRef<IdentifyColumnsDialogComponent, any> = this.identifyColumnsDialog();
+          dialogRef.afterClosed().subscribe(
+            (columnIndeces: any) => {
+              //values of response are either all -1 or all not so only check date
+              if(columnIndeces.date > -1){
+                this.fileProcessed = true;
+                this.makeNewEntries(columnIndeces);
+              }
+            }
+          );
         },
         header: false  // Set to true if CSV has headers
       });
@@ -277,130 +300,153 @@ export class UploadStatementComponent {
     }, 100);
   }
 
-  identifyColumnsDialog(): void {
-    this.dialog.open(IdentifyColumnsDialogComponent, {
+  // identifyColumns(): void {
+
+  //   var wordColumnIndeces: number[] = [];
+  //   var emptyColumnIndeces: number[] = [];
+  //   var currencyColumnIndeces: number[] = [];
+    
+  //   var columnIndeces: any = {};
+  //   columnIndeces.date = -1;
+  //   columnIndeces.name = -1;
+  //   columnIndeces.gain = -1;
+  //   columnIndeces.loss = -1;
+
+  //   const dateRegex = /\d{2}\D\d{2}\D\d{4}|\d{4}\D\d{2}\D\d{2}/;
+
+  //   //identify column types
+  //   for(let i=0; i < this.csvData[0].length; i++){
+  //     var entry: string = this.csvData[0][i];
+
+  //     if(entry === ""){
+  //       emptyColumnIndeces.push(i);
+  //     }
+  //     else if(/[a-zA-Z]/.test(entry)){
+  //       wordColumnIndeces.push(i);
+  //     }
+  //     else if(dateRegex.test(entry)){
+  //       //If there are multiple date-like columns the last is taken
+  //       columnIndeces.date = i;
+  //     }
+  //     else{
+  //       entry = entry.replace('$', '').replace(',','');
+
+  //       //finds a sequence of numbers followed by an optional period and two more numbers
+  //       if(/\b\d+(?:\.\d{2})?\b/.test(entry)){
+  //         currencyColumnIndeces.push(i);
+  //       }
+  //     }
+
+  //     if(wordColumnIndeces.length === 1){
+  //       columnIndeces.name = wordColumnIndeces[0];
+  //     }
+
+
+
+  //   }
+
+
+  // }
+
+  identifyColumnsDialog(): MatDialogRef<IdentifyColumnsDialogComponent, any> {
+    return this.dialog.open(IdentifyColumnsDialogComponent, {
       data: this.csvData
     });
   }
   
-  makeNewEntries(): void{
-    //sets newEntries from csvData
-    //makes transactionSets when name not found in db
-
-    //sets newExpenseSets, recognizedExpenseSets, duplicateExpenseNames
-
-    
-    //removes empty entry at the end
-    this.csvData.splice(this.csvData.length - 1, 1);
-
+  /**
+   * 
+   * @param columnIndeces contains the indeces {date,name,gain,loss}
+   * sets newExpenseSets, recognizedExpenseSets, duplicateExpenseNames
+   */
+  makeNewEntries(columnIndeces: any): void{
     //remove headers from Rogers files
     if(this.isRogersFile){
       this.csvData.splice(0, 1);
     }
 
     for(let i = this.csvData.length - 1; i > -1; i--){
+      //there are sometimes empty rows due to newlines at end of file
+      if(this.csvData[i].length > 1){
+        var newExpense: Expense = emptyExpense();
+        var newExpenseName: ExpenseName = emptyExpenseName();
+  
+        var tempDate: Date = new Date(this.csvData[i][columnIndeces.date])
+        var formattedDate: string = this.formatDate(tempDate);
+        var amount: number = 0;
+        var newName: string = this.csvData[i][columnIndeces.name];
 
-      var newExpense: Expense = emptyExpense();
-      var newExpenseName: ExpenseName = emptyExpenseName();
-
-      var balanceChange: number = 0;
-      var newName: string = '';
-      var formattedDate: string = '';
-
-      if(this.isCibcFile){
-
-        formattedDate = this.csvData[i][0];        
-        newName = this.csvData[i][1];
-
-        const splitNameList = newName.split(" ").slice(0, -2);
-        if(splitNameList.length > 0){
-          newName = splitNameList.join(" ");
-        }
-
-        if(this.csvData[i][2]){
-          balanceChange = parseFloat(this.csvData[i][2]) * -1;
+        //calculate amount
+        if(columnIndeces.gain === columnIndeces.loss){
+          amount = -1 * parseFloat(this.csvData[i][columnIndeces.gain].replace("$", '').replace(",",""));
         }
         else{
-          balanceChange = parseFloat(this.csvData[i][3]);
-        }
-      }
-      else if(this.isTdDebitFile){
-        newName = this.csvData[i][1];
-        var dateParts = this.csvData[i][0].split("/")
-        formattedDate = dateParts[2] + "-" + dateParts[0] + "-" + dateParts[1];
-        if(this.csvData[i][2]){
-          balanceChange = parseFloat(this.csvData[i][2]) * -1;
-        }
-        else{
-          balanceChange = parseFloat(this.csvData[i][3]);
-        }
-      }
-      else if(this.isRogersFile){
-        //rogers files handle negative values as gains
-        balanceChange = -1 * parseFloat(this.csvData[i][12].replace("$", '').replace(",",""));
-        formattedDate = this.csvData[i][0];
-        newName = this.csvData[i][7];
-      }
-
-      
-      
-      //ExpenseSet code
-
-      newExpense.amount = balanceChange;
-      newExpense.date = formattedDate;
-
-      newExpenseName.name = newName;
-      newExpenseName.expenseList = [newExpense]
-
-      var newFirstWord = newName.split(" ")[0];
-
-      //this could be optimized to check only date amount and name by hand before making entry
-      
-      //if the entry is in database, put into recognized or duplicate new entries
-      //otherwise create a selectedSetToSplitNames
-      if(this.uniqueDbNames.includes(newName)){
-        var match = this.dbEntries.filter( val => {
-          return val.name == newName &&
-                  val.date == formattedDate &&
-                  val.amount == balanceChange;
-        });
-        
-        if(match.length != 0){
-          this.duplicateExpenseNames.push(newExpenseName);
-        }
-        else{
-          //expenseSet code
-
-          var dbTransaction = this.dbEntries.find(t => t.name === newName);
-
-          if(dbTransaction != undefined){
-            var foundCategory = dbTransaction.category;
-
-            var matchExpenseSet = this.recognizedExpenseSets.find( val => val.firstWord === newFirstWord);
-    
-            if(matchExpenseSet == undefined){
-              var newExpenseSet: ExpenseSet = expenseSetFromExpenseName(newExpenseName);
-              newExpenseSet.category = foundCategory;
-              this.recognizedExpenseSets.push(newExpenseSet);
-            }
-            else{
-              insertExpenseNameIntoExpenseSet(newExpenseName, matchExpenseSet);              
-            }
+          if(this.csvData[i][columnIndeces.loss]){
+            amount = parseFloat(this.csvData[i][columnIndeces.loss]) * -1;
           }
           else{
-            console.error("Problem finding recognized transaction name for " + newName);
+            amount = parseFloat(this.csvData[i][columnIndeces.gain]);
           }
         }
-      }
-      else{
-        var matchExpenseSet = this.newExpenseSets.find( val => val.firstWord === newFirstWord);
+        amount = Math.round((amount + Number.EPSILON) * 100) / 100;
+
+        
+        newExpense.amount = amount;
+        newExpense.date = formattedDate;
+        newExpenseName.name = newName;
+        newExpenseName.expenseList = [newExpense]
+
+        console.log(newName);
   
-        if(matchExpenseSet == undefined){
-          var newExpenseSet: ExpenseSet = expenseSetFromExpenseName(newExpenseName);
-          this.newExpenseSets.push(newExpenseSet);
+        var newFirstWord = newName.split(" ")[0];
+        //this could be optimized to check only date amount and name by hand before making entry
+        
+        //if the entry is in database, put into recognized or duplicate new entries
+        //otherwise create a selectedSetToSplitNames
+        if(this.uniqueDbNames.includes(newName)){
+          var match = this.dbEntries.filter( val => {
+            return val.name == newName &&
+                    val.date == formattedDate &&
+                    val.amount == amount;
+          });
+
+          console.log('newName found', newName);
+          
+          if(match.length != 0){
+            this.duplicateExpenseNames.push(newExpenseName);
+          }
+          else{
+            var dbTransaction = this.dbEntries.find(t => t.name === newName);
+  
+            if(dbTransaction != undefined){
+              var foundCategory = dbTransaction.category;
+  
+              var matchExpenseSet = this.recognizedExpenseSets.find( val => val.firstWord === newFirstWord);
+      
+              if(matchExpenseSet == undefined){
+                var newExpenseSet: ExpenseSet = expenseSetFromExpenseName(newExpenseName);
+                newExpenseSet.category = foundCategory;
+                this.recognizedExpenseSets.push(newExpenseSet);
+              }
+              else{
+                insertExpenseNameIntoExpenseSet(newExpenseName, matchExpenseSet);              
+              }
+            }
+            else{
+              console.error("Problem finding recognized transaction name for " + newName);
+            }
+          }
         }
         else{
-          insertExpenseNameIntoExpenseSet(newExpenseName, matchExpenseSet);
+          var matchExpenseSet = this.newExpenseSets.find( val => val.firstWord === newFirstWord);
+    
+          if(matchExpenseSet == undefined){
+            var newExpenseSet: ExpenseSet = expenseSetFromExpenseName(newExpenseName);
+            this.newExpenseSets.push(newExpenseSet);
+          }
+          else{
+            insertExpenseNameIntoExpenseSet(newExpenseName, matchExpenseSet);
+          }
         }
       }
     }
@@ -411,6 +457,14 @@ export class UploadStatementComponent {
       });
     }
 
+  }
+
+  formatDate(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+  
+    return `${year}-${month}-${day}`;
   }
 
   /* Table view */
@@ -492,8 +546,28 @@ export class UploadStatementComponent {
     });
   }
 
-  onTransactionDelete(): void {
+  onTransactionDelete(newSet: ExpenseSet, setList: ExpenseSet[]): void {
+    console.log(newSet);
+    var dialogRef: MatDialogRef<CheckRowTableComponent,any> =  this.dialog.open(CheckRowTableComponent, {
+      data: newSet.expenseNameList
+    });
     
+    dialogRef.afterClosed().subscribe(
+      (remainingExpenseNameList: ExpenseName[]) => {
+        if(remainingExpenseNameList != undefined){
+          if(remainingExpenseNameList.length === 0){
+            var newSetIndex: number = setList.indexOf(newSet);
+            if(newSetIndex > -1){
+              setList.splice(newSetIndex, 1);
+            }
+          }
+          else{
+            newSet.expenseNameList = remainingExpenseNameList;
+            recalculateSetTotalAmount(newSet);
+          }
+        }
+      }
+    );
   }
 
   //START Submit Statement Flow

@@ -6,7 +6,7 @@ import { NewCategoryComponent } from '../../dialog/new-category/new-category.com
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateCategoryConfirmComponent } from './dialog/update-category-confirm/update-category-confirm.component';
 import { FormsModule } from '@angular/forms';
-import { MonYearPipe } from '../../pipes/mon-year.pipe';
+// import { MonYearPipe } from '../../pipes/mon-year.pipe';
 import { TextInputDialogComponent } from '../../dialog/text-input-dialog/text-input-dialog.component';
 declare const CanvasJS: any;
 
@@ -16,7 +16,7 @@ declare const CanvasJS: any;
   imports: [
     CommonModule,
     FormsModule,
-    MonYearPipe,
+    // MonYearPipe,
   ],
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.css'
@@ -32,7 +32,7 @@ export class AnalyticsComponent {
   blacklistCategories: string[] = [];
   filterCategories: string[] = [];
 
-  BLACKLIST_MONTH_DEFAULT: string[] = ["Internal", "Transfers"];
+  BLACKLIST_MONTH_DEFAULT: string[] = ["Internal", "Transfers", "Mortgage"];
   blacklistMonthCategories: string[] = [];
   filterMonthCategories: string[] = [];
 
@@ -66,7 +66,7 @@ export class AnalyticsComponent {
   
   constructor(
     private transactionService: TransactionService,
-    private monYearPipe: MonYearPipe,
+    // private monYearPipe: MonYearPipe,
     private dialog: MatDialog,
   ) { }
 
@@ -178,6 +178,7 @@ export class AnalyticsComponent {
   // Data Filters
   
   updateAccountPeriodDbTransactions(): void {
+    console.log(this.selectedAccounts);
     this.accountPeriodDbTransactions = this.dbTransactions.filter( (val) => {
       return this.selectedAccounts.includes(val.account)
           && this.selectedYyyymm.includes(val.yyyymm);
@@ -245,7 +246,8 @@ export class AnalyticsComponent {
       );
 
       monthlyTotals.push({
-        label: this.monYearPipe.transform(month), 
+        // label: this.monYearPipe.transform(month), 
+        label: month,
         y: monthTotal,
         indexLabelFormatter: (e:any) => {
           return e.dataPoint.y < 0? "\u2800-$" + (-1*e.dataPoint.y) + "\u2800" : "\u2800$" + e.dataPoint.y + "\u2800"
@@ -258,7 +260,8 @@ export class AnalyticsComponent {
       });
 
       zeroLine.push({
-        label: this.monYearPipe.transform(month),
+        // label: this.monYearPipe.transform(month),
+        label: month,
         y: 0,
         markerSize: 0,
       })
@@ -435,6 +438,7 @@ export class AnalyticsComponent {
       this.selectedAccounts.push(account);
     }
 
+    this.updateAccountPeriodDbTransactions();
     this.updateFilteredDbTransactions();
     this.updateMonth();
     this.updateOvertimeChart();

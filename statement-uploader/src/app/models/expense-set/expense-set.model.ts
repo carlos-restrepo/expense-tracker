@@ -81,6 +81,18 @@ export function insertExpenseNameIntoExpenseSet(expenseName: ExpenseName, expens
   }
 }
 
+export function recalculateSetTotalAmount(expenseSet: ExpenseSet): void {
+  var newTotal: number = 0;
+
+  expenseSet.expenseNameList.forEach((expenseName) => {
+    expenseName.expenseList.forEach((expense) => {
+      newTotal += expense.amount;
+    })
+  });
+
+  expenseSet.totalAmount = newTotal;
+}
+
 export function findCommonSubstring(str1: string, str2: string): string {
   let common = "";
 
